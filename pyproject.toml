@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "aas2openapi"
+version = "0.1.0"
+description = ""
+authors = ["SebBehrendt"]
+license = "MIT License"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+pydantic = "^1.10.9"
+basyx-python-sdk= { git = "https://github.com/eclipse-basyx/basyx-python-sdk.git", branch = "improve/V30RC02" }
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
