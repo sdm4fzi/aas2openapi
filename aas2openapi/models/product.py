@@ -24,7 +24,6 @@ class MaterialData(Submodel):
 
  
 class BOM(Submodel):
-    ID: str
     description: str
     assembly: Optional[str]
     subProductCount: Optional[str]
@@ -37,7 +36,6 @@ class ProcessReference(Submodel):
     
     
 class Product(AAS):
-    ID: str
     description: str
     bom: BOM
     process_reference: ProcessReference 

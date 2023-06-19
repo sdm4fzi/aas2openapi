@@ -10,7 +10,7 @@ from aas2openapi.models.base import AAS, Submodel, SubmodelElementCollection
 from aas2openapi.models import product
 
 example_smc = product.subProduct(
-    ID = "SMC_example", 
+    id_ = "SMC_example", 
     description = "xyz", 
     subProbductType = "a",
     subProductAAS = "b",
@@ -20,7 +20,7 @@ example_smc = product.subProduct(
     )
 
 example_material = product.MaterialData(
-    ID = "1",
+    id_ = "1",
     description = "y",
     material_type = "A",
     processes = "B",
@@ -28,7 +28,7 @@ example_material = product.MaterialData(
     )
 
 example_bom = product.BOM(
-    ID = "Example_Bom_Submodel",
+    id_ = "Example_Bom_Submodel",
     description = "this is an example",
     assembly = "assembly",
     subProduct = [example_smc],
@@ -37,16 +37,16 @@ example_bom = product.BOM(
     )
 
 example_process_reference = product.ProcessReference(
-    ID = "Example_Process_Reference",
+    id_ = "Example_Process_Reference",
     description = "this is an example",
-    semanticID = "1",
+    semantic_id = "1",
     process_id="2",
     process_type="3",
 )
 
 
 example_product = product.Product(
-    ID = "Example_Product", description = "456", bom = example_bom, process_reference=example_process_reference, 
+    id_ = "Example_Product", description = "456", bom = example_bom, process_reference=example_process_reference, 
     )
 
 
@@ -58,9 +58,9 @@ example_product = product.Product(
 def create_submodel(attribute_name: str,
                     attribute_value: Submodel):
     submodel = model.Submodel(
-                    id_short = attribute_value.ID,
-                    id_ = attribute_value.ID,
-                    description=attribute_value.ID
+                    id_short = attribute_value.id_,
+                    id_ = attribute_value.id_,
+                    description=attribute_value.id_
                     )
     
     print(attribute_name, "is a submodel")
@@ -130,11 +130,11 @@ def convert_pydantic_model_to_aas(aas: product.AAS) -> model.AssetAdministration
     #  transform pydantic model to AAS
 
     # step 1.1: create an identifier for the Asset
-    identifier = model.Identifier(id_=aas.ID, id_type=model.Identifier.CUSTOM)
+    identifier = model.Identifier(id_=aas.id_, id_type=model.Identifier.CUSTOM)
 
     # step 1.2: create the Asset object
     asset = model.Asset(
-        id_short = aas.ID,
+        id_short = aas.id_,
         kind = model.AssetKind.INSTANCE,
         identification = identifier,
     )
@@ -169,22 +169,22 @@ def convert_pydantic_model_to_aas(aas: product.AAS) -> model.AssetAdministration
 
     # # ALTERNATIVE: step 2 and 3 can alternatively be done in one step
     # submodel = model.Submodel(
-    #     id_short=product.Submodel.ID,
+    #     id_short=product.Submodel.id_,
     #     identification=model.Identifier(
-    #         product.Submodel.ID, model.IdentifierType.CUSTOM
+    #         product.Submodel.id_, model.IdentifierType.CUSTOM
     #     ),
     # )
 
     # submodel = model.Submodel(
-    #     id_short=product.SubmodelElementCollection.ID,
+    #     id_short=product.SubmodelElementCollection.id_,
     #     identification=model.Identifier(
-    #         product.SubmodelElementCollection.ID, model.IdentifierType.CUSTOM
+    #         product.SubmodelElementCollection.id_, model.IdentifierType.CUSTOM
     #     ),
     # )
 
     # aas = model.AssetAdministrationShell(
-    #     id_short=aas.ID,
-    #     identification=model.Identifier(aas.ID, model.IdentifierType.CUSTOM),
+    #     id_short=aas.id_,
+    #     identification=model.Identifier(aas.id_, model.IdentifierType.CUSTOM),
     #     asset=model.AASReference.from_referable(asset),
     #     submodel={model.AASReference.from_referable(submodel)},
     # )

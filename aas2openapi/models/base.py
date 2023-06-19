@@ -1,35 +1,42 @@
 from __future__ import annotations
 from typing import Optional
 
-from pydantic import BaseModel
+from enum import Enum
+
+from pydantic import dataclasses
 from pydantic import AnyUrl
 
-
-class AAS(BaseModel):
+@dataclasses.dataclass
+class AAS:
     type: str = "AssetAdministrationShell"
-    ID: str
+    id_: str
     description: str
+    id_short: Optional[str]
 
-
-class Submodel(BaseModel):
+@dataclasses.dataclass
+class Submodel:
     type: str = "Submodel"
-    ID: str
+    id_: str
     description: str
-    semanticID: Optional[AnyUrl]
+    id_short: Optional[str]
+    semantic_id: Optional[AnyUrl]
 
-    
-class SubmodelElementCollection(BaseModel):
+@dataclasses.dataclass
+class SubmodelElementCollection:
     type: str = "SubmodelElementCollection"
-    ID: str
+    id_: str
     description: str
-    semanticID: Optional[AnyUrl]
+    id_short: Optional[str]
+    semantic_id: Optional[AnyUrl]
 
-
-class SubmodelElementList(BaseModel):
+@dataclasses.dataclass
+class SubmodelElementList:
     type: str = "SubmodelElementList"
-    ID: str
+    id_: str
     description: str
-    semanticID: Optional[AnyUrl]
+    id_short: Optional[str]
+    semantic_id: Optional[AnyUrl]
+    semantic_id_list_element: Optional[AnyUrl]
     
     
 
