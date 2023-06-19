@@ -26,11 +26,9 @@ class MaterialData(Submodel):
 
 @dataclass
 class BOM(Submodel):
-    description: str
     assembly: Optional[str]
     subProductCount: Optional[str]
     subProduct: Optional[List[SubmodelElementCollection]]
-    material_data: MaterialData    
 
 
 @dataclass  
@@ -42,4 +40,6 @@ class ProcessReference(Submodel):
 class Product(AAS):
     bom: BOM
     process_reference: ProcessReference
+    material_data: MaterialData    
+
 

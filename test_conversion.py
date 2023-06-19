@@ -38,7 +38,6 @@ example_bom = product.BOM(
     assembly="assembly",
     subProduct=[example_smc],
     subProductCount="http://193.196.37.23:4001/aasServer/shells/AAS_caesar_id/aas",
-    material_data=example_material,
     id_short="cd",
     semantic_id="http://www.google.de3",
 )
@@ -58,11 +57,13 @@ example_product = product.Product(
     description="456",
     bom=example_bom,
     process_reference=example_process_reference,
+    material_data=example_material,
     id_short="e",
 )
 
 obj_store = aas2openapi.convert_pydantic_model_to_aas(example_product)
 
+print(obj_store)
 
 with open("data.json", "w", encoding="utf-8") as json_file:
     basyx.aas.adapter.json.write_aas_json_file(json_file, obj_store)

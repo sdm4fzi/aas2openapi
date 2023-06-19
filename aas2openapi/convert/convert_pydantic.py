@@ -13,6 +13,9 @@ def get_vars(obj: object) -> dict:
     vars_dict = vars(obj)
     vars_dict = {key: value for key, value in vars_dict.items() if key[0] != "_"}
     vars_dict = {key: value for key, value in vars_dict.items() if value is not None}
+    vars_dict = {key: value for key, value in vars_dict.items() if key != "id_"}
+    vars_dict = {key: value for key, value in vars_dict.items() if key != "description"}
+    vars_dict = {key: value for key, value in vars_dict.items() if key != "id_short"}
     return vars_dict
 
 
@@ -72,7 +75,7 @@ def create_submodel(
     submodel = model.Submodel(
         id_short=get_id_short(attribute_value),
         id_=attribute_value.id_,
-        description=attribute_value.id_,
+        description=model.LangStringSet({"en": attribute_value.description})
     )
 
     submodel_attributes = get_vars(attribute_value)
@@ -84,7 +87,7 @@ def create_submodel(
 
     for sm_attribute_name, sm_attribute_value in submodel_attributes.items():
         submodel_element = create_submodel_element(
-            sm_attribute_name, sm_attribute_value
+            sm_attribute_name, sm_attribute_value, submodel
         )
         submodel.submodel_element.add(submodel_element)
     return submodel
@@ -94,14 +97,14 @@ def create_submodel_element(
     attribute_name: str,
     attribute_value: Union[
         base.SubmodelElementCollection, base.SubmodelElementList, str, float, int, bool
-    ],
+    ], submodel: model.Submodel = None,
 ) -> model.SubmodelElement:
     if isinstance(attribute_value, base.SubmodelElementCollection):
         smc = create_submodel_element_collection(attribute_value, attribute_name)
         print("SMC created", attribute_name)
         return smc
     elif isinstance(attribute_value, list):
-        sml = create_submodel_element_list(attribute_name, attribute_value)
+        sml = create_submodel_element_list(attribute_name, attribute_value, submodel)
         print("SML created", attribute_name)
         return sml
     elif (isinstance(attribute_value, str)) and (
@@ -169,18 +172,21 @@ def create_submodel_element_collection(
         id_short=name,
         value=value,
     )
+    return smc
 
 
-def create_submodel_element_list(name: str, value: list) -> model.SubmodelElementList:
+def create_submodel_element_list(name: str, value: list, submodel: model.Submodel) -> model.SubmodelElementList:
     print(name)
     submodel_elements = []
     for el in value:
-        submodel_element = create_submodel_element(name, el)
+        submodel_element = create_submodel_element(name, el, submodel)
+        # print(submodel_element)
+        # submodel_element.parent = submodel.id_short
         submodel_elements.append(submodel_element)
 
     sml = model.SubmodelElementList(
         id_short=name,
-        type_value_list_element=get_value_type_of_attribute(value[0]),
+        type_value_list_element=type(submodel_elements[0]),
         value=submodel_elements,
     )
     return sml
