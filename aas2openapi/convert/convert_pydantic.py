@@ -87,7 +87,7 @@ def create_submodel(
 
     for sm_attribute_name, sm_attribute_value in submodel_attributes.items():
         submodel_element = create_submodel_element(
-            sm_attribute_name, sm_attribute_value, submodel
+            sm_attribute_name, sm_attribute_value
         )
         submodel.submodel_element.add(submodel_element)
     return submodel
@@ -96,15 +96,19 @@ def create_submodel(
 def create_submodel_element(
     attribute_name: str,
     attribute_value: Union[
-        base.SubmodelElementCollection, base.SubmodelElementList, str, float, int, bool
-    ], submodel: model.Submodel = None,
+        base.SubmodelElementCollection, str, float, int, bool, tuple, list, set
+    ]
 ) -> model.SubmodelElement:
     if isinstance(attribute_value, base.SubmodelElementCollection):
         smc = create_submodel_element_collection(attribute_value, attribute_name)
         print("SMC created", attribute_name)
         return smc
-    elif isinstance(attribute_value, list):
-        sml = create_submodel_element_list(attribute_name, attribute_value, submodel)
+    elif isinstance(attribute_value, list) or isinstance(attribute_value, tuple):
+        sml = create_submodel_element_list(attribute_name, attribute_value)
+        print("SML created", attribute_name)
+        return sml
+    elif isinstance(attribute_value, set):
+        sml = create_submodel_element_list(attribute_name, attribute_value, ordered=False)
         print("SML created", attribute_name)
         return sml
     elif (isinstance(attribute_value, str)) and (
@@ -175,18 +179,17 @@ def create_submodel_element_collection(
     return smc
 
 
-def create_submodel_element_list(name: str, value: list, submodel: model.Submodel) -> model.SubmodelElementList:
+def create_submodel_element_list(name: str, value: list, ordered=True) -> model.SubmodelElementList:
     print(name)
     submodel_elements = []
     for el in value:
-        submodel_element = create_submodel_element(name, el, submodel)
-        # print(submodel_element)
-        # submodel_element.parent = submodel.id_short
+        submodel_element = create_submodel_element(name, el)
         submodel_elements.append(submodel_element)
 
     sml = model.SubmodelElementList(
         id_short=name,
         type_value_list_element=type(submodel_elements[0]),
         value=submodel_elements,
+        order_relevant=ordered
     )
     return sml
