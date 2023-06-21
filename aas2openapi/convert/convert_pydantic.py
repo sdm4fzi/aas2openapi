@@ -5,7 +5,8 @@ from urllib import parse
 
 from basyx.aas import model
 
-from typing import List, Union
+from typing import Union
+from pydantic import BaseModel, Field
 
 from aas2openapi.models import base
 
@@ -31,20 +32,20 @@ def convert_pydantic_model_to_aas(
     Returns:
         model.DictObjectStore[model.Identifiable]: DictObjectStore with all Submodels
     """
-    print(aas)
     aas_attributes = get_vars(aas)
     aas_submodels = []  # placeholder for submodels created
-    print(aas_attributes)
     for attribute_name, attribute_value in aas_attributes.items():
         if isinstance(attribute_value, base.Submodel):
-            print("Create submodel")
             tempsubmodel = create_submodel(
                 attribute_name=attribute_name, attribute_value=attribute_value
             )
             aas_submodels.append(tempsubmodel)
 
+    asset_information = model.AssetInformation(
+    )
+
     aas = model.AssetAdministrationShell(
-        asset_information="lol",
+        asset_information=asset_information,
         id_short=aas.id_,
         id_=aas.id_,
         submodel={
@@ -79,11 +80,6 @@ def create_submodel(
     )
 
     submodel_attributes = get_vars(attribute_value)
-    print(
-        attribute_name,
-        "is a submodel with the following attribues:",
-        submodel_attributes,
-    )
 
     for sm_attribute_name, sm_attribute_value in submodel_attributes.items():
         submodel_element = create_submodel_element(
@@ -101,15 +97,12 @@ def create_submodel_element(
 ) -> model.SubmodelElement:
     if isinstance(attribute_value, base.SubmodelElementCollection):
         smc = create_submodel_element_collection(attribute_value, attribute_name)
-        print("SMC created", attribute_name)
         return smc
     elif isinstance(attribute_value, list) or isinstance(attribute_value, tuple):
         sml = create_submodel_element_list(attribute_name, attribute_value)
-        print("SML created", attribute_name)
         return sml
     elif isinstance(attribute_value, set):
         sml = create_submodel_element_list(attribute_name, attribute_value, ordered=False)
-        print("SML created", attribute_name)
         return sml
     elif (isinstance(attribute_value, str)) and (
         (
@@ -127,12 +120,10 @@ def create_submodel_element(
             id_short=attribute_name,
             value=reference,
         )
-        print("Reference", attribute_name)
         return reference_element
     else:
         property = create_property(attribute_name, attribute_value)
 
-        print("Property", attribute_name)
         return property
 
 
@@ -152,7 +143,6 @@ def get_value_type_of_attribute(
 def create_property(
     attribute_name: str, attribute_value: Union[str, int, float, bool]
 ) -> model.Property:
-    print(attribute_name)
     property = model.Property(
         id_short=attribute_name,
         value_type=get_value_type_of_attribute(attribute_value),
@@ -166,7 +156,6 @@ def create_submodel_element_collection(
 ) -> model.SubmodelElementCollection:
     value = []
     smc_attributes = get_vars(pydantic_submodel_element_collection)
-    print(smc_attributes)
 
     for attribute_name, attribute_value in smc_attributes.items():
         sme = create_submodel_element(attribute_name, attribute_value)
@@ -180,7 +169,6 @@ def create_submodel_element_collection(
 
 
 def create_submodel_element_list(name: str, value: list, ordered=True) -> model.SubmodelElementList:
-    print(name)
     submodel_elements = []
     for el in value:
         submodel_element = create_submodel_element(name, el)
@@ -193,3 +181,27 @@ def create_submodel_element_list(name: str, value: list, ordered=True) -> model.
         order_relevant=ordered
     )
     return sml
+
+
+from ba_syx_aas_repository_client.models import (
+    AssetInformationAssetKind,
+)
+import basyx.aas.adapter.json.json_serialization
+
+
+class ClientModel(BaseModel):
+    basyx_object: Union[model.AssetAdministrationShell, model.Submodel]
+
+    class Config:
+        arbitrary_types_allowed = True
+
+    def to_dict(self) -> dict:
+        basyx_json_string = json.dumps(self.basyx_object, cls=basyx.aas.adapter.json.AASToJsonEncoder)
+        data = json.loads(basyx_json_string)
+        if isinstance(self.basyx_object, model.AssetAdministrationShell):
+            value = data["assetInformation"]["assetKind"]
+            if value == "Instance":
+                data["assetInformation"]["assetKind"] = AssetInformationAssetKind.INSTANCE
+            if value == "Type":
+                data["assetInformation"]["assetKind"] = AssetInformationAssetKind.TYPE            
+        return data

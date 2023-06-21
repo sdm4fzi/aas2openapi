@@ -75,6 +75,25 @@ type = "directory"
 url = "ba-syx-aas-repository-client"
 
 [[package]]
+name = "ba-syx-submodel-repository-client"
+version = "2.0"
+description = "A client library for accessing BaSyx Submodel Repository"
+category = "main"
+optional = false
+python-versions = "^3.8"
+files = []
+develop = false
+
+[package.dependencies]
+attrs = ">=21.3.0"
+httpx = ">=0.15.4,<0.25.0"
+python-dateutil = "^2.8.0"
+
+[package.source]
+type = "directory"
+url = "ba-syx-submodel-repository-client"
+
+[[package]]
 name = "basyx-python-sdk"
 version = "0.2.2"
 description = ""
@@ -1047,4 +1066,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "e13a1c6dd6c4b26c975eca89b58f713582e05a0cafbfc5a946f9eaa972c30922"
+content-hash = "eeffba172bf825b80cc4715ae58a02c872b535d1df954f04cfc22df31c2aa95d"

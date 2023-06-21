@@ -7,6 +7,7 @@ import basyx.aas.adapter.json.json_serialization
 from typing import List
 
 import aas2openapi
+from aas2openapi.convert.convert_pydantic import ClientModel
 from aas2openapi.models import product
 
 
@@ -23,7 +24,7 @@ example_smc = product.subProduct(
 )
 
 example_material = product.MaterialData(
-    id_="1",
+    id_="Material_example",
     description="y",
     material_type="A",
     processes="B",
@@ -43,7 +44,7 @@ example_bom = product.BOM(
 )
 
 example_process_reference = product.ProcessReference(
-    id_="Example_Process_Reference",
+    id_="example_process_reference",
     description="this is an example",
     process_id="2",
     process_type="3",
@@ -63,7 +64,66 @@ example_product = product.Product(
 
 obj_store = aas2openapi.convert_pydantic_model_to_aas(example_product)
 
-print(obj_store)
+# print(obj_store)
 
 with open("data.json", "w", encoding="utf-8") as json_file:
     basyx.aas.adapter.json.write_aas_json_file(json_file, obj_store)
+
+
+aas: model.AssetAdministrationShell = obj_store.get("Example_Product")
+aas_for_client = ClientModel(basyx_object=aas)
+
+from ba_syx_aas_repository_client import Client
+from ba_syx_aas_repository_client.types import Response, Unset
+
+client = Client("http://localhost:8081")
+
+
+from ba_syx_aas_repository_client.api.asset_administration_shell_repository_api import (
+    post_asset_administration_shell,
+    get_all_asset_administration_shells,
+    get_asset_administration_shell_by_id,
+)
+
+my_data = aas_for_client
+
+import asyncio
+
+try:
+    response = asyncio.run(
+        post_asset_administration_shell.asyncio_detailed(client=client, json_body=my_data)
+    )
+except Exception as e:
+    print("Error:", e)
+data = asyncio.run(get_all_asset_administration_shells.asyncio(client=client))
+# response: Response[AssetAdministrationShell] = get_all_asset_administration_shells.asyncio_detailed(client=client)
+
+print(data)
+
+
+
+submodels = []
+for item in obj_store:
+    item = obj_store.get(item.id)
+    if isinstance(item, model.Submodel):
+        submodels.append(ClientModel(basyx_object=item))
+
+
+from ba_syx_submodel_repository_client import Client
+
+client = Client("http://localhost:8082")
+
+from ba_syx_submodel_repository_client.api.submodel_repository_api import (
+    post_submodel
+    
+)
+
+for submodel in submodels:
+    my_data = submodel
+    try:
+        response = asyncio.run(
+            post_submodel.asyncio(client=client, json_body=my_data)
+        )
+        print(response)
+    except Exception as e:
+        print("Error:", e)

@@ -14,6 +14,7 @@ uvicorn = {extras = ["standard"], version = "^0.22.0"}
 fastapi = "^0.97.0"
 openapi-python-client = "^0.14.1"
 ba-syx-aas-repository-client = {path = "ba-syx-aas-repository-client"}
+ba-syx-submodel-repository-client = {path = "ba-syx-submodel-repository-client"}
 
 
 [build-system]
