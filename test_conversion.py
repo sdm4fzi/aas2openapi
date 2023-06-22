@@ -10,6 +10,8 @@ import aas2openapi
 from aas2openapi.convert.convert_pydantic import ClientModel
 from aas2openapi.models import product
 
+from dataclasses import asdict
+
 
 example_smc = product.subProduct(
     id_="SMC_example",
@@ -61,6 +63,8 @@ example_product = product.Product(
     material_data=example_material,
     id_short="e",
 )
+with open("model.json", "w", encoding="utf-8") as json_file:
+    json.dump({"products": [asdict(example_product)]}, json_file, indent=4)
 
 obj_store = aas2openapi.convert_pydantic_model_to_aas(example_product)
 

@@ -61,7 +61,7 @@ def convert_pydantic_model_to_aas(
 
 def get_id_short(
     element: Union[
-        base.Submodel, base.SubmodelElementCollection, base.SubmodelElementList
+        base.Submodel, base.SubmodelElementCollection
     ]
 ) -> str:
     if element.id_short:
