@@ -10,6 +10,7 @@ from pydantic import BaseModel, Field
 
 from aas2openapi.models import base
 
+
 def get_vars(obj: object) -> dict:
     vars_dict = vars(obj)
     vars_dict = {key: value for key, value in vars_dict.items() if key[0] != "_"}
@@ -34,15 +35,12 @@ def convert_pydantic_model_to_aas(
     """
     aas_attributes = get_vars(aas)
     aas_submodels = []  # placeholder for submodels created
-    for attribute_name, attribute_value in aas_attributes.items():
+    for attribute_value in aas_attributes.values():
         if isinstance(attribute_value, base.Submodel):
-            tempsubmodel = create_submodel(
-                attribute_name=attribute_name, attribute_value=attribute_value
-            )
+            tempsubmodel = convert_pydantic_model_to_sm(attribute_value=attribute_value)
             aas_submodels.append(tempsubmodel)
 
-    asset_information = model.AssetInformation(
-    )
+    asset_information = model.AssetInformation()
 
     aas = model.AssetAdministrationShell(
         asset_information=asset_information,
@@ -59,24 +57,18 @@ def convert_pydantic_model_to_aas(
     return obj_store
 
 
-def get_id_short(
-    element: Union[
-        base.Submodel, base.SubmodelElementCollection
-    ]
-) -> str:
+def get_id_short(element: Union[base.Submodel, base.SubmodelElementCollection]) -> str:
     if element.id_short:
         return element.id_short
     else:
         return element.id_
 
 
-def create_submodel(
-    attribute_name: str, attribute_value: base.Submodel
-) -> model.Submodel:
+def convert_pydantic_model_to_sm(attribute_value: base.Submodel) -> model.Submodel:
     submodel = model.Submodel(
         id_short=get_id_short(attribute_value),
         id_=attribute_value.id_,
-        description=model.LangStringSet({"en": attribute_value.description})
+        description=model.LangStringSet({"en": attribute_value.description}),
     )
 
     submodel_attributes = get_vars(attribute_value)
@@ -93,7 +85,7 @@ def create_submodel_element(
     attribute_name: str,
     attribute_value: Union[
         base.SubmodelElementCollection, str, float, int, bool, tuple, list, set
-    ]
+    ],
 ) -> model.SubmodelElement:
     if isinstance(attribute_value, base.SubmodelElementCollection):
         smc = create_submodel_element_collection(attribute_value, attribute_name)
@@ -102,7 +94,9 @@ def create_submodel_element(
         sml = create_submodel_element_list(attribute_name, attribute_value)
         return sml
     elif isinstance(attribute_value, set):
-        sml = create_submodel_element_list(attribute_name, attribute_value, ordered=False)
+        sml = create_submodel_element_list(
+            attribute_name, attribute_value, ordered=False
+        )
         return sml
     elif (isinstance(attribute_value, str)) and (
         (
@@ -168,7 +162,9 @@ def create_submodel_element_collection(
     return smc
 
 
-def create_submodel_element_list(name: str, value: list, ordered=True) -> model.SubmodelElementList:
+def create_submodel_element_list(
+    name: str, value: list, ordered=True
+) -> model.SubmodelElementList:
     submodel_elements = []
     for el in value:
         submodel_element = create_submodel_element(name, el)
@@ -178,7 +174,7 @@ def create_submodel_element_list(name: str, value: list, ordered=True) -> model.
         id_short=name,
         type_value_list_element=type(submodel_elements[0]),
         value=submodel_elements,
-        order_relevant=ordered
+        order_relevant=ordered,
     )
     return sml
 
@@ -196,12 +192,16 @@ class ClientModel(BaseModel):
         arbitrary_types_allowed = True
 
     def to_dict(self) -> dict:
-        basyx_json_string = json.dumps(self.basyx_object, cls=basyx.aas.adapter.json.AASToJsonEncoder)
+        basyx_json_string = json.dumps(
+            self.basyx_object, cls=basyx.aas.adapter.json.AASToJsonEncoder
+        )
         data = json.loads(basyx_json_string)
         if isinstance(self.basyx_object, model.AssetAdministrationShell):
             value = data["assetInformation"]["assetKind"]
             if value == "Instance":
-                data["assetInformation"]["assetKind"] = AssetInformationAssetKind.INSTANCE
+                data["assetInformation"][
+                    "assetKind"
+                ] = AssetInformationAssetKind.INSTANCE
             if value == "Type":
-                data["assetInformation"]["assetKind"] = AssetInformationAssetKind.TYPE            
+                data["assetInformation"]["assetKind"] = AssetInformationAssetKind.TYPE
         return data
