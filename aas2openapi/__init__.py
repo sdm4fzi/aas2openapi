@@ -1,2 +1,2 @@
-from aas2openapi.convert.convert_pydantic import convert_pydantic_model_to_aas, convert_pydantic_model_to_sm
+from aas2openapi.convert.convert_pydantic import convert_pydantic_model_to_aas, convert_pydantic_model_to_submodel
 from aas2openapi.convert.convert_aas import convert_aas_to_pydantic_model, convert_sm_to_pydantic_model

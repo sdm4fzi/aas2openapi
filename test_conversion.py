@@ -100,9 +100,16 @@ try:
 except Exception as e:
     print("Error:", e)
 data = asyncio.run(get_all_asset_administration_shells.asyncio(client=client))
-# response: Response[AssetAdministrationShell] = get_all_asset_administration_shells.asyncio_detailed(client=client)
 
 print(data)
+
+from aas2openapi.util import client_utils
+
+base64_str = client_utils.get_base64_from_string(example_product.id_)
+
+data = asyncio.run(get_asset_administration_shell_by_id.asyncio(aas_identifier=base64_str, client=client))
+
+print("retrieved aas:", data)
 
 
 

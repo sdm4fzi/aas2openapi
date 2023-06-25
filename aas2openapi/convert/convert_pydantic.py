@@ -22,7 +22,7 @@ def get_vars(obj: object) -> dict:
 
 
 def convert_pydantic_model_to_aas(
-    aas: base.AAS,
+    pydantic_aas: base.AAS,
 ) -> model.DictObjectStore[model.Identifiable]:
     """
     Convert a pydantic model to an AssetAdministrationShell and return it as a DictObjectStore with all Submodels
@@ -33,25 +33,27 @@ def convert_pydantic_model_to_aas(
     Returns:
         model.DictObjectStore[model.Identifiable]: DictObjectStore with all Submodels
     """
-    aas_attributes = get_vars(aas)
+    aas_attributes = get_vars(pydantic_aas)
     aas_submodels = []  # placeholder for submodels created
     for attribute_value in aas_attributes.values():
         if isinstance(attribute_value, base.Submodel):
-            tempsubmodel = convert_pydantic_model_to_sm(attribute_value=attribute_value)
+            tempsubmodel = convert_pydantic_model_to_submodel(pydantic_submodel=attribute_value)
             aas_submodels.append(tempsubmodel)
 
     asset_information = model.AssetInformation()
 
-    aas = model.AssetAdministrationShell(
+    model.Identifier()
+
+    basyx_aas = model.AssetAdministrationShell(
         asset_information=asset_information,
-        id_short=aas.id_,
-        id_=aas.id_,
+        id_short=pydantic_aas.id_short,
+        id_=model.Identifier(pydantic_aas.id_),
         submodel={
             model.ModelReference.from_referable(submodel) for submodel in aas_submodels
         },
     )
     obj_store: model.DictObjectStore[model.Identifiable] = model.DictObjectStore()
-    obj_store.add(aas)
+    obj_store.add(basyx_aas)
     for sm in aas_submodels:
         obj_store.add(sm)
     return obj_store
@@ -64,21 +66,21 @@ def get_id_short(element: Union[base.Submodel, base.SubmodelElementCollection]) 
         return element.id_
 
 
-def convert_pydantic_model_to_sm(attribute_value: base.Submodel) -> model.Submodel:
-    submodel = model.Submodel(
-        id_short=get_id_short(attribute_value),
-        id_=attribute_value.id_,
-        description=model.LangStringSet({"en": attribute_value.description}),
+def convert_pydantic_model_to_submodel(pydantic_submodel: base.Submodel) -> model.Submodel:
+    basyx_submodel = model.Submodel(
+        id_short=get_id_short(pydantic_submodel),
+        id_=model.Identifier(pydantic_submodel.id_),
+        description=model.LangStringSet({"en": pydantic_submodel.description}),
     )
 
-    submodel_attributes = get_vars(attribute_value)
+    submodel_attributes = get_vars(pydantic_submodel)
 
     for sm_attribute_name, sm_attribute_value in submodel_attributes.items():
         submodel_element = create_submodel_element(
             sm_attribute_name, sm_attribute_value
         )
-        submodel.submodel_element.add(submodel_element)
-    return submodel
+        basyx_submodel.submodel_element.add(submodel_element)
+    return basyx_submodel
 
 
 def create_submodel_element(
