@@ -1,0 +1,224 @@
+{
+    "models": [
+        {
+            "id_": "http://example.com/asset1",
+            "description": "",
+            "id_short": "asset1",
+            "sm_class_name": {
+                "id_": "http://example.com/submodel1",
+                "description": "{'en': 'This is a submodel'}",
+                "id_short": "submodel1",
+                "semantic_id": "",
+                "property_1_attribute_name": "value1",
+                "property_2_attribute_name": 2,
+                "SmeClassName": {
+                    "description": "",
+                    "id_short": "submodel_element_collection1",
+                    "semantic_id": "",
+                    "property_3_attribute_name": "value3",
+                    "property_4_attribute_name": 4
+                }
+            },
+            "sm2_class_name": {
+                "id_": "http://example.com/submodel2",
+                "description": "{'en': 'This is a submodel'}",
+                "id_short": "submodel2",
+                "semantic_id": "",
+                "SubmodelElementListClassName": [
+                    "value5",
+                    "value7"
+                ],
+                "reference_element1_attribute_name": "http://example.com/submodel1"
+            }
+        }
+    ],
+    "schema": [
+        {
+            "title": "AasClassName",
+            "type": "object",
+            "properties": {
+                "id_": {
+                    "title": "Id ",
+                    "default": "http://example.com/asset1",
+                    "type": "string"
+                },
+                "description": {
+                    "title": "Description",
+                    "default": "",
+                    "type": "string"
+                },
+                "id_short": {
+                    "title": "Id Short",
+                    "default": "asset1",
+                    "type": "string"
+                },
+                "sm_class_name": {
+                    "title": "Sm Class Name",
+                    "default": {
+                        "id_": "http://example.com/submodel1",
+                        "description": "{'en': 'This is a submodel'}",
+                        "id_short": "submodel1",
+                        "semantic_id": "",
+                        "property_1_attribute_name": "value1",
+                        "property_2_attribute_name": 2,
+                        "SmeClassName": {
+                            "description": "",
+                            "id_short": "submodel_element_collection1",
+                            "semantic_id": "",
+                            "property_3_attribute_name": "value3",
+                            "property_4_attribute_name": 4
+                        }
+                    },
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/SmClassName"
+                        }
+                    ]
+                },
+                "sm2_class_name": {
+                    "title": "Sm2 Class Name",
+                    "default": {
+                        "id_": "http://example.com/submodel2",
+                        "description": "{'en': 'This is a submodel'}",
+                        "id_short": "submodel2",
+                        "semantic_id": "",
+                        "SubmodelElementListClassName": [
+                            "value5",
+                            "value7"
+                        ],
+                        "reference_element1_attribute_name": "http://example.com/submodel1"
+                    },
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/Sm2ClassName"
+                        }
+                    ]
+                }
+            },
+            "definitions": {
+                "SmeClassName": {
+                    "title": "SmeClassName",
+                    "type": "object",
+                    "properties": {
+                        "description": {
+                            "title": "Description",
+                            "default": "",
+                            "type": "string"
+                        },
+                        "id_short": {
+                            "title": "Id Short",
+                            "default": "submodel_element_collection1",
+                            "type": "string"
+                        },
+                        "semantic_id": {
+                            "title": "Semantic Id",
+                            "default": "",
+                            "type": "string"
+                        },
+                        "property_3_attribute_name": {
+                            "title": "Property 3 Attribute Name",
+                            "default": "value3",
+                            "type": "string"
+                        },
+                        "property_4_attribute_name": {
+                            "title": "Property 4 Attribute Name",
+                            "default": 4,
+                            "type": "integer"
+                        }
+                    }
+                },
+                "SmClassName": {
+                    "title": "SmClassName",
+                    "type": "object",
+                    "properties": {
+                        "id_": {
+                            "title": "Id ",
+                            "default": "http://example.com/submodel1",
+                            "type": "string"
+                        },
+                        "description": {
+                            "title": "Description",
+                            "default": "{'en': 'This is a submodel'}",
+                            "type": "string"
+                        },
+                        "id_short": {
+                            "title": "Id Short",
+                            "default": "submodel1",
+                            "type": "string"
+                        },
+                        "semantic_id": {
+                            "title": "Semantic Id",
+                            "default": "",
+                            "type": "string"
+                        },
+                        "property_1_attribute_name": {
+                            "title": "Property 1 Attribute Name",
+                            "default": "value1",
+                            "type": "string"
+                        },
+                        "property_2_attribute_name": {
+                            "title": "Property 2 Attribute Name",
+                            "default": 2,
+                            "type": "integer"
+                        },
+                        "SmeClassName": {
+                            "title": "Smeclassname",
+                            "default": {
+                                "description": "",
+                                "id_short": "submodel_element_collection1",
+                                "semantic_id": "",
+                                "property_3_attribute_name": "value3",
+                                "property_4_attribute_name": 4
+                            },
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/SmeClassName"
+                                }
+                            ]
+                        }
+                    }
+                },
+                "Sm2ClassName": {
+                    "title": "Sm2ClassName",
+                    "type": "object",
+                    "properties": {
+                        "id_": {
+                            "title": "Id ",
+                            "default": "http://example.com/submodel2",
+                            "type": "string"
+                        },
+                        "description": {
+                            "title": "Description",
+                            "default": "{'en': 'This is a submodel'}",
+                            "type": "string"
+                        },
+                        "id_short": {
+                            "title": "Id Short",
+                            "default": "submodel2",
+                            "type": "string"
+                        },
+                        "semantic_id": {
+                            "title": "Semantic Id",
+                            "default": "",
+                            "type": "string"
+                        },
+                        "SubmodelElementListClassName": {
+                            "title": "Submodelelementlistclassname",
+                            "default": [
+                                "value5",
+                                "value7"
+                            ],
+                            "type": "array",
+                            "items": {}
+                        },
+                        "reference_element1_attribute_name": {
+                            "title": "Reference Element1 Attribute Name",
+                            "default": "http://example.com/submodel1",
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        }
+    ]
+}

@@ -4,24 +4,20 @@ from typing import Optional
 from enum import Enum
 
 from pydantic.dataclasses import dataclass
-from pydantic import AnyUrl
+from pydantic import BaseModel
 
-@dataclass
-class AAS:
+class AAS(BaseModel):
     id_: str
     description: str
     id_short: Optional[str]
 
-@dataclass
-class Submodel:
+class Submodel(BaseModel):
     id_: str
     description: str
     id_short: Optional[str]
     semantic_id: Optional[str]
 
-@dataclass
-class SubmodelElementCollection:
-    id_: str
+class SubmodelElementCollection(BaseModel):
     description: str
     id_short: Optional[str]
     semantic_id: Optional[str]

@@ -42,8 +42,6 @@ def convert_pydantic_model_to_aas(
 
     asset_information = model.AssetInformation()
 
-    model.Identifier()
-
     basyx_aas = model.AssetAdministrationShell(
         asset_information=asset_information,
         id_short=pydantic_aas.id_short,

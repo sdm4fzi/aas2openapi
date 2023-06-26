@@ -76,7 +76,7 @@ def retrieve_aas_from_server(aas_id: str) -> base.AAS:
     aas_data = asyncio.run(
         get_asset_administration_shell_by_id.asyncio(client=client, aas_identifier=base_64_id)
     )
-    model_data = aas2openapi.convert_aas_to_pydantic_model(aas_data)
+    model_data = aas2openapi.convert_object_store_to_pydantic_models(aas_data)
     return model_data
 
 
@@ -85,7 +85,7 @@ def retrieve_all_aas_from_server() -> List[base.AAS]:
     aas_data = asyncio.run(get_all_asset_administration_shells.asyncio(client=client))
     model_data = []
     for aas in aas_data:
-        model_data.append(aas2openapi.convert_aas_to_pydantic_model(aas))
+        model_data.append(aas2openapi.convert_object_store_to_pydantic_models(aas))
     return model_data
 
 
