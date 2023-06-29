@@ -16,7 +16,6 @@ openapi-python-client = "^0.14.1"
 ba-syx-aas-repository-client = {path = "ba-syx-aas-repository-client"}
 ba-syx-submodel-repository-client = {path = "ba-syx-submodel-repository-client"}
 
-
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"

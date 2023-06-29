@@ -1,4 +1,6 @@
-from fastapi import FastAPI, Request
+from __future__ import annotations
+
+from fastapi import FastAPI, Request, HTTPException
 from pydantic import BaseModel, parse_obj_as, create_model
 import json
 
@@ -8,15 +10,18 @@ from ba_syx_aas_repository_client import Client as AASClient
 from ba_syx_submodel_repository_client import Client as SMClient
 
 import asyncio
+from anyio import run
 from basyx.aas import model
 
 from ba_syx_aas_repository_client.api.asset_administration_shell_repository_api import (
     post_asset_administration_shell,
     get_all_asset_administration_shells,
     get_asset_administration_shell_by_id,
+    put_asset_administration_shell_by_id,
+    delete_asset_administration_shell_by_id,
 )
 from ba_syx_submodel_repository_client.api.submodel_repository_api import (
-    post_submodel, get_all_submodels, get_submodel_by_id
+    post_submodel, get_all_submodels, get_submodel_by_id, delete_submodel_by_id, put_submodel_by_id
     
 )
 
@@ -51,55 +56,102 @@ def get_all_submodels_from_object_store(obj_store: model.DictObjectStore) -> Lis
     return submodels
 
 
-async def push_aas_to_server(aas: base.AAS):
+def aas_is_on_server(aas_id: str) -> bool:
+    try: 
+        get_aas_from_server(aas_id)
+        return True
+    except Exception as e:
+        return False
+    
+def submodel_is_on_server(submodel_id: str) -> bool:
+    try: 
+        get_submodel_from_server(submodel_id)
+        return True
+    except Exception as e:
+        return False
+
+async def post_aas_to_server(aas: base.AAS):
+    if aas_is_on_server(aas.id_):
+        raise HTTPException(status_code=400, detail=f"AAS with id {aas.id_} already exists")
     obj_store = aas2openapi.convert_pydantic_model_to_aas(aas)
     basyx_aas = obj_store.get(aas.id_)
     aas_for_client = ClientModel(basyx_object=basyx_aas)
     client = AASClient("http://localhost:8081")
-    try:
-        response = asyncio.run(
-            post_asset_administration_shell.sync(
-                client=client, json_body=aas_for_client
-            )
+    response = asyncio.run(
+        post_asset_administration_shell.asyncio(
+            client=client, json_body=aas_for_client
         )
-    except Exception as e:
-        print("Error:", e)
+    )
 
     submodels = get_all_submodels_from_object_store(basyx_aas)
     for submodel in submodels:
-        push_submodel_to_server(submodel)
+        post_submodel_to_server(submodel)
 
+async def put_aas_to_server(aas: base.AAS):
+    if not aas_is_on_server(aas.id_):
+        raise HTTPException(status_code=400, detail=f"AAS with id {aas.id_} does not exist")
+    obj_store = aas2openapi.convert_pydantic_model_to_aas(aas)
+    basyx_aas = obj_store.get(aas.id_)
+    aas_for_client = ClientModel(basyx_object=basyx_aas)
+    client = AASClient("http://localhost:8081")
+    base_64_id = client_utils.get_base64_from_string(aas.id_)
+    response = asyncio.run(
+        put_asset_administration_shell_by_id.asyncio(
+            aas_identifier=base_64_id, client=client, json_body=aas_for_client
+        )
+    )
 
-def retrieve_aas_from_server(aas_id: str) -> base.AAS:
+    submodels = get_all_submodels_from_object_store(basyx_aas)
+    for submodel in submodels:
+        put_submodel_to_server(submodel)
+
+async def get_aas_from_server(aas_id: str) -> base.AAS:
     client = AASClient("http://localhost:8081")
     base_64_id = client_utils.get_base64_from_string(aas_id)
-    aas_data = asyncio.run(
+    aas_data = run(
         get_asset_administration_shell_by_id.asyncio(client=client, aas_identifier=base_64_id)
     )
-    model_data = aas2openapi.convert_object_store_to_pydantic_models(aas_data)
+    model_data = aas2openapi.convert_object_store_to_pydantic_models(aas_data).pop()
     return model_data
 
-
-def retrieve_all_aas_from_server() -> List[base.AAS]:
+async def delete_aas_from_server(aas_id: str):
     client = AASClient("http://localhost:8081")
-    aas_data = asyncio.run(get_all_asset_administration_shells.asyncio(client=client))
+    base_64_id = client_utils.get_base64_from_string(aas_id)
+    response = await delete_asset_administration_shell_by_id.asyncio(client=client, aas_identifier=base_64_id)
+
+
+async def get_all_aas_from_server() -> List[base.AAS]:
+    client = AASClient("http://localhost:8081")
+    aas_data = await get_all_asset_administration_shells.asyncio(client=client)
     model_data = []
     for aas in aas_data:
         model_data.append(aas2openapi.convert_object_store_to_pydantic_models(aas))
     return model_data
 
 
-def push_submodel_to_server(submodel: model.Submodel):
+async def post_submodel_to_server(pydantic_submodel: base.Submodel):
+    if submodel_is_on_server(pydantic_submodel.id_):
+        raise HTTPException(status_code=400, detail=f"Submodel with id {pydantic_submodel.id} already exists")
+    basyx_submodel = aas2openapi.convert_pydantic_model_to_submodel(pydantic_submodel)
+    submodel_for_client = ClientModel(basyx_object=basyx_submodel)
     client = SMClient("http://localhost:8082")
-    try:
-        response = asyncio.run(
-            post_submodel.asyncio(client=client, json_body=submodel)
-        )
-        print(response)
-    except Exception as e:
-        print("Error:", e)
+    response = asyncio.run(
+        post_submodel.asyncio(client=client, json_body=submodel_for_client)
+    )
 
-def get_submodel_from_server(submodel_id: str) -> base.Submodel:
+async def put_submodel_to_server(submodel: base.Submodel):
+    if not submodel_is_on_server(submodel.id_):
+        raise HTTPException(status_code=400, detail=f"Submodel with id {submodel.id} does not exist")
+    basyx_submodel = aas2openapi.convert_pydantic_model_to_submodel(submodel)
+    submodel_for_client = ClientModel(basyx_object=basyx_submodel)
+    client = SMClient("http://localhost:8082")
+    base_64_id = client_utils.get_base64_from_string(submodel.id_)
+    response = await put_submodel_by_id.asyncio(
+            submodel_identifier=base_64_id, client=client, json_body=submodel
+        )
+        
+
+async def get_submodel_from_server(submodel_id: str) -> base.Submodel:
     client = SMClient("http://localhost:8082")
     base_64_id = client_utils.get_base64_from_string(submodel_id)
     submodel_data = asyncio.run(
@@ -108,7 +160,7 @@ def get_submodel_from_server(submodel_id: str) -> base.Submodel:
     model_data = aas2openapi.convert_sm_to_pydantic_model(submodel_data)
     return model_data
 
-def get_all_submodels_from_server() -> List[base.Submodel]:
+async def get_all_submodels_from_server() -> List[base.Submodel]:
     client = SMClient("http://localhost:8082")
     submodel_data = asyncio.run(get_all_submodels.asyncio(client=client))
     model_data = []
@@ -116,15 +168,12 @@ def get_all_submodels_from_server() -> List[base.Submodel]:
         model_data.append(aas2openapi.convert_sm_to_pydantic_model(submodel))
     return model_data
 
-def post_submodel_to_server(submodel: base.Submodel) -> base.Submodel:
+async def delete_submodel_from_server(submodel_id: str):
     client = SMClient("http://localhost:8082")
-    try:
-        response = asyncio.run(
-            post_submodel.asyncio(client=client, json_body=submodel)
-        )
-    except Exception as e:
-        print("Error:", e)
-    return submodel
+    base_64_id = client_utils.get_base64_from_string(submodel_id)
+    response = asyncio.run(
+        delete_submodel_by_id.asyncio(client=client, submodel_identifier=base_64_id)
+    )
 
 
 def generate_submodel_endpoints_from_model(
@@ -146,63 +195,57 @@ def generate_submodel_endpoints_from_model(
         f"/{model_name}/{{submodel_id}}/{submodel_name}", tags=[submodel_name]
     )
     async def delete_submodel(submodel_id: str):
-        # TODO: query aas server for submodel deletion
-        return {"message": "Item deleted"}
+        delete_submodel_from_server(submodel_id)
+        return {"message": f"Succesfully deleted submodel with id {submodel_id}"}
 
-    @app.put(
-        f"/{model_name}/{{submodel_id}}/{submodel_name}", tags=[submodel_name]
-    )
-    async def put_submodel(submodel_id: int, submodel: submodel_type) -> Dict[str, str]:
-        # TODO: query aas server for submodel update with put method if it already exists
-        return {"message": "Item updated"}
+    # @app.put(
+    #     f"/{model_name}/{{submodel_id}}/{submodel_name}", tags=[submodel_name]
+    # )
+    # async def put_submodel(submodel_id: int, submodel: submodel_type) -> Dict[str, str]:
+    #     put_submodel_to_server(submodel)
+    #     return {"message": f"Succesfully updated submodel with id {submodel_id}"}
 
-    @app.post(
-        f"/{model_name}/{{item_id}}/{submodel_name}",
-        tags=[submodel_name],
-        response_model=submodel_type,
-    )
-    async def post_item(submodel: submodel_type) -> Dict[str, str]:
-        # TODO: check if submodel already exists, if so, raise an error
-        # TODO: query aas server for submodel creation with post method, if it does not exist yet
-        push_submodel_to_server(submodel)
-        return submodel
+    # @app.post(
+    #     f"/{model_name}/{{item_id}}/{submodel_name}",
+    #     tags=[submodel_name],
+    #     response_model=submodel_type,
+    # )
+    # async def post_item(submodel: submodel_type) -> Dict[str, str]:
+    #     post_submodel_to_server(submodel)
+    #     return submodel
 
 
-def generate_endpoints_from_model(model: Type[BaseModel]):
-    model_name = model.__name__
+def generate_endpoints_from_model(pydantic_model: Type[BaseModel]):
+    model_name = pydantic_model.__name__
 
-    @app.get(f"/{model_name}/", tags=[model_name], response_model=List[model])
+    @app.get(f"/{model_name}/", tags=[model_name], response_model=List[pydantic_model])
     async def get_aas():
-        data_retrieved = retrieve_all_aas_from_server()
+        data_retrieved = await get_all_aas_from_server()
         return data_retrieved
 
-    @app.get(f"/{model_name}/{{item_id}}", tags=[model_name], response_model=model)
+    @app.get(f"/{model_name}/{{item_id}}", tags=[model_name], response_model=pydantic_model)
     async def get_aas_by_id(aas_id: str):
-        aas = retrieve_aas_from_server(aas_id)
+        aas = await get_aas_from_server(aas_id)
         return aas
 
     @app.delete(f"/{model_name}/{{item_id}}", tags=[model_name])
-    async def delete_aas(item_id: str):
-        # TODO: query aas server for object deletion
-        return {"message": "Item deleted"}
+    async def delete_aas(aas_id: str):
+        await delete_aas_from_server(aas_id)
+        return {"message": f"Succesfully deleted aas with id {aas_id}"}
 
     @app.put(f"/{model_name}/{{item_id}}", tags=[model_name])
-    async def put_aas(item_id: str, item: model) -> Dict[str, str]:
-        # TODO: query aas server for object update with put method if it already exists
-        return {"message": "Item updated"}
+    async def put_aas(aas_id: str, model_instance: pydantic_model) -> Dict[str, str]:
+        await put_aas_to_server(model_instance)
+        return {"message": f"Succesfully updated aas with id {aas_id}"}
 
-    @app.post(f"/{model_name}/", tags=[model_name], response_model=model)
-    async def post_aas(item: model) -> Dict[str, str]:
-        # TODO: check if aas already exists, if so, raise an error
-        print("____________push the aas")
-        print(item)
-        await push_aas_to_server(item)
-        return {"haha": "haha"}
+    # @app.post(f"/{model_name}/", tags=[model_name], response_model=pydantic_model)
+    # async def post_aas(model_instance: pydantic_model) -> Dict[str, str]:
+    #     await post_aas_to_server(model_instance)
+    #     return model_instance
 
-    submodels = get_all_submodels_from_model(model)
+    submodels = get_all_submodels_from_model(pydantic_model)
     for submodel in submodels:
-        print(submodel)
-        generate_submodel_endpoints_from_model(model=model, submodel_type=submodel)
+        generate_submodel_endpoints_from_model(model=pydantic_model, submodel_type=submodel)
 
 
 def generate_endpoints_from_instances(instances: List[BaseModel]):

@@ -13,7 +13,6 @@
                 "subProductCount": "http://193.196.37.23:4001/aasServer/shells/AAS_caesar_id/aas",
                 "subProduct": [
                     {
-                        "id_": "SMC_example",
                         "description": "xyz",
                         "id_short": "a",
                         "semantic_id": "http://www.google.de/1",

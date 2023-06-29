@@ -2,9 +2,9 @@ from enum import Enum
 
 
 class AssetInformationAssetKind(str, Enum):
-    INSTANCE = "INSTANCE"
+    INSTANCE = "Instance"
     NOT_APPLICABLE = "NOT_APPLICABLE"
-    TYPE = "TYPE"
+    TYPE = "Type"
 
     def __str__(self) -> str:
         return str(self.value)

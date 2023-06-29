@@ -7,6 +7,7 @@ from basyx.aas import model
 
 from typing import Union
 from pydantic import BaseModel, Field
+from aas2openapi.util import convert_util
 
 from aas2openapi.models import base
 
@@ -37,7 +38,9 @@ def convert_pydantic_model_to_aas(
     aas_submodels = []  # placeholder for submodels created
     for attribute_value in aas_attributes.values():
         if isinstance(attribute_value, base.Submodel):
-            tempsubmodel = convert_pydantic_model_to_submodel(pydantic_submodel=attribute_value)
+            tempsubmodel = convert_pydantic_model_to_submodel(
+                pydantic_submodel=attribute_value
+            )
             aas_submodels.append(tempsubmodel)
 
     asset_information = model.AssetInformation()
@@ -49,6 +52,9 @@ def convert_pydantic_model_to_aas(
         submodel={
             model.ModelReference.from_referable(submodel) for submodel in aas_submodels
         },
+        embedded_data_specifications=[
+            convert_util.get_data_specification_for_pydantic_model(pydantic_aas)
+        ],
     )
     obj_store: model.DictObjectStore[model.Identifiable] = model.DictObjectStore()
     obj_store.add(basyx_aas)
@@ -64,11 +70,16 @@ def get_id_short(element: Union[base.Submodel, base.SubmodelElementCollection]) 
         return element.id_
 
 
-def convert_pydantic_model_to_submodel(pydantic_submodel: base.Submodel) -> model.Submodel:
+def convert_pydantic_model_to_submodel(
+    pydantic_submodel: base.Submodel,
+) -> model.Submodel:
     basyx_submodel = model.Submodel(
         id_short=get_id_short(pydantic_submodel),
         id_=model.Identifier(pydantic_submodel.id_),
         description=model.LangStringSet({"en": pydantic_submodel.description}),
+        embedded_data_specifications=[
+            convert_util.get_data_specification_for_pydantic_model(pydantic_submodel)
+        ],
     )
 
     submodel_attributes = get_vars(pydantic_submodel)
@@ -113,6 +124,9 @@ def create_submodel_element(
         reference_element = model.ReferenceElement(
             id_short=attribute_name,
             value=reference,
+            embedded_data_specifications=[
+                convert_util.get_data_specification_for_attribute_name(attribute_name)
+            ],
         )
         return reference_element
     else:
@@ -141,6 +155,9 @@ def create_property(
         id_short=attribute_name,
         value_type=get_value_type_of_attribute(attribute_value),
         value=attribute_value,
+        embedded_data_specifications=[
+            convert_util.get_data_specification_for_attribute_name(attribute_name)
+        ],
     )
     return property
 
@@ -156,8 +173,11 @@ def create_submodel_element_collection(
         value.append(sme)
 
     smc = model.SubmodelElementCollection(
-        id_short=name,
+        id_short=pydantic_submodel_element_collection.id_short,
         value=value,
+        embedded_data_specifications=[
+            convert_util.get_data_specification_for_attribute_name(name)
+        ],
     )
     return smc
 
@@ -175,6 +195,9 @@ def create_submodel_element_list(
         type_value_list_element=type(submodel_elements[0]),
         value=submodel_elements,
         order_relevant=ordered,
+        embedded_data_specifications=[
+            convert_util.get_data_specification_for_attribute_name(name)
+        ],
     )
     return sml
 
@@ -195,13 +218,36 @@ class ClientModel(BaseModel):
         basyx_json_string = json.dumps(
             self.basyx_object, cls=basyx.aas.adapter.json.AASToJsonEncoder
         )
-        data = json.loads(basyx_json_string)
-        if isinstance(self.basyx_object, model.AssetAdministrationShell):
-            value = data["assetInformation"]["assetKind"]
-            if value == "Instance":
-                data["assetInformation"][
-                    "assetKind"
-                ] = AssetInformationAssetKind.INSTANCE
-            if value == "Type":
-                data["assetInformation"]["assetKind"] = AssetInformationAssetKind.TYPE
+        data: dict = json.loads(basyx_json_string)
+        # if isinstance(self.basyx_object, model.AssetAdministrationShell):
+        #     data = rename_assetKind(data)
+        data = rename_data_specifications(data)
+                
         return data
+    
+
+def rename_assetKind(data: dict) -> dict:
+    if not data["assetInformation"]["assetKind"]:
+        raise ValueError("No assetKind found in item:", data)
+    if data["assetInformation"]["assetKind"] == "Instance":
+        data["assetInformation"]["assetKind"] = AssetInformationAssetKind.INSTANCE
+        print("renamed assetKind to", data["assetInformation"]["assetKind"])
+    elif data["assetInformation"]["assetKind"] == "Type":
+        data["assetInformation"]["assetKind"] = AssetInformationAssetKind.TYPE
+    return data
+
+def rename_data_specifications(dictionary: dict):
+    for key, value in dictionary.items():
+        if key == "embeddedDataSpecifications":
+            for data_spec in value:
+                if data_spec["dataSpecification"]["type"] == "GlobalReference":
+                    data_spec["dataSpecification"]["type"] = "ExternalReference"
+                if data_spec["dataSpecificationContent"]["modelType"] == "DataSpecificationIEC61360":
+                    data_spec["dataSpecificationContent"]["modelType"] = "DataSpecificationIec61360"
+        elif isinstance(value, dict):
+            rename_data_specifications(value)
+        elif isinstance(value, list):
+            for item in value:
+                if isinstance(item, dict):
+                    rename_data_specifications(item)
+    return dictionary

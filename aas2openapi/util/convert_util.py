@@ -17,7 +17,7 @@ def convert_camel_case_to_underscrore_str(came_case_string: str) -> str:
         str: The underscore seperated string.
     """
     came_case_string = came_case_string[0].lower() + came_case_string[1:]
-    new_class_name = re.sub(r'(?<!^)(?=[A-Z])', '_', came_case_string).lower()
+    new_class_name = re.sub(r"(?<!^)(?=[A-Z])", "_", came_case_string).lower()
     return new_class_name
 
 
@@ -30,7 +30,7 @@ def save_model_list_with_schema(model_list: typing.List[BaseModel], path: str):
     """
     save_dict = {
         "models": [model.dict() for model in model_list],
-        "schema": [model.schema() for model in model_list]
+        "schema": [model.schema() for model in model_list],
     }
 
     with open(path, "w", encoding="utf-8") as json_file:
@@ -88,3 +88,41 @@ def get_str_description(langstring_set: model.LangStringSet) -> str:
         dict_description[langstring] = langstring_set[langstring]
     str_description = str(dict_description)
     return str_description
+
+
+def get_data_specification_for_pydantic_model(
+    pydantic_model: BaseModel,
+) -> model.EmbeddedDataSpecification:
+    return model.EmbeddedDataSpecification(
+        data_specification=model.GlobalReference(
+            key=(
+                model.Key(
+                    type_=model.KeyTypes.GLOBAL_REFERENCE,
+                    value=pydantic_model.__class__.__name__,
+                ),
+            ),
+        ),
+        data_specification_content=model.DataSpecificationIEC61360(
+            preferred_name=model.LangStringSet({"en": "class_name"}),
+            value=pydantic_model.__class__.__name__,
+        ),
+    )
+
+
+def get_data_specification_for_attribute_name(
+    attribute_name: str,
+) -> model.EmbeddedDataSpecification:
+    return model.EmbeddedDataSpecification(
+        data_specification=model.GlobalReference(
+            key=(
+                model.Key(
+                    type_=model.KeyTypes.GLOBAL_REFERENCE,
+                    value=attribute_name,
+                ),
+            ),
+        ),
+        data_specification_content=model.DataSpecificationIEC61360(
+            preferred_name=model.LangStringSet({"en": "attribute_name"}),
+            value=attribute_name,
+        ),
+    )
