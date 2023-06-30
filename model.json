@@ -32,12 +32,12 @@
                 "process_id": "2",
                 "process_type": "3"
             },
-            "material_data": {
+            "product_data": {
                 "id_": "Material_example",
                 "description": "y",
                 "id_short": "b",
                 "semantic_id": "http://www.google.de23",
-                "material_type": "A",
+                "product_type": "A",
                 "processes": "B",
                 "transport_process": "C"
             }

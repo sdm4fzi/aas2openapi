@@ -4,7 +4,7 @@ from fastapi import FastAPI, Request, HTTPException
 from pydantic import BaseModel, parse_obj_as, create_model
 import json
 
-from typing import List, Union, TypeVar, Generic, Type, Dict
+from typing import List, Union, TypeVar, Generic, Type, Dict, Any
 
 from ba_syx_aas_repository_client import Client as AASClient
 from ba_syx_submodel_repository_client import Client as SMClient
@@ -95,10 +95,8 @@ async def put_aas_to_server(aas: base.AAS):
     aas_for_client = ClientModel(basyx_object=basyx_aas)
     client = AASClient("http://localhost:8081")
     base_64_id = client_utils.get_base64_from_string(aas.id_)
-    response = asyncio.run(
-        put_asset_administration_shell_by_id.asyncio(
+    response = put_asset_administration_shell_by_id.asyncio(
             aas_identifier=base_64_id, client=client, json_body=aas_for_client
-        )
     )
 
     submodels = get_all_submodels_from_object_store(basyx_aas)
@@ -217,6 +215,10 @@ def generate_submodel_endpoints_from_model(
 
 def generate_endpoints_from_model(pydantic_model: Type[BaseModel]):
     model_name = pydantic_model.__name__
+    model = pydantic_model
+
+    print(model_name)
+    print(pydantic_model)
 
     @app.get(f"/{model_name}/", tags=[model_name], response_model=List[pydantic_model])
     async def get_aas():
@@ -233,15 +235,17 @@ def generate_endpoints_from_model(pydantic_model: Type[BaseModel]):
         await delete_aas_from_server(aas_id)
         return {"message": f"Succesfully deleted aas with id {aas_id}"}
 
+    # TODO: rework here the usage of model_instances type!!
     @app.put(f"/{model_name}/{{item_id}}", tags=[model_name])
-    async def put_aas(aas_id: str, model_instance: pydantic_model) -> Dict[str, str]:
-        await put_aas_to_server(model_instance)
+    async def put_aas(aas_id: str, model_instance: Any) -> Dict[str, str]:
+        # put_aas_to_server(model_instance)
         return {"message": f"Succesfully updated aas with id {aas_id}"}
 
-    # @app.post(f"/{model_name}/", tags=[model_name], response_model=pydantic_model)
-    # async def post_aas(model_instance: pydantic_model) -> Dict[str, str]:
-    #     await post_aas_to_server(model_instance)
-    #     return model_instance
+    # TODO: rework here the usage of model_instances type!!
+    @app.post(f"/{model_name}/", tags=[model_name], response_model=pydantic_model)
+    async def post_aas(model_instance: Any) -> Dict[str, str]:
+        await post_aas_to_server(model_instance)
+        return model_instance
 
     submodels = get_all_submodels_from_model(pydantic_model)
     for submodel in submodels:
@@ -252,9 +256,13 @@ def generate_endpoints_from_instances(instances: List[BaseModel]):
     items = []
     model_name = type(instances[0]).__name__
     pydantic_model = create_model(model_name, **vars(instances[0]))
+    print(pydantic_model)
 
     generate_endpoints_from_model(pydantic_model)
 
+def generate_fastapi_app_from_types(model_types: List[Type[BaseModel]]):
+    for model_type in model_types:
+        generate_endpoints_from_model(model_type)
 
 def generate_fastapi_app(json_file: str):
     with open(json_file) as file:
@@ -267,6 +275,19 @@ def generate_fastapi_app(json_file: str):
             models.append(model)
         generate_endpoints_from_instances(models)
 
+def generate_models_from_file(json_file: str) -> List[BaseModel]:
+    with open(json_file) as file:
+        models = json.load(file)
 
-# Example usage
-generate_fastapi_app("model.json")
+    for model_definitions in models.values():
+        models = []
+        for model_definition in model_definitions:
+            model = create_pydantic_model(model_definition)
+            models.append(model)
+    print("models", models)
+    return models
+
+
+# models = generate_models_from_file("model.json")
+# types = [type(model) for model in models]
+generate_fastapi_app_from_types([product.Product])
