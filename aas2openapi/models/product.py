@@ -30,7 +30,6 @@ class BOM(Submodel):
     subProductCount: Optional[str]
     subProduct: Optional[List[SubmodelElementCollection]]
 
-
 class ProcessReference(Submodel):
     process_id: str
     process_type: str    
