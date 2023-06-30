@@ -59,7 +59,7 @@ example_product = product.Product(
     description="456",
     bom=example_bom,
     process_reference=example_process_reference,
-    material_data=example_material,
+    product_data=example_material,
     id_short="e",
 )
 with open("model.json", "w", encoding="utf-8") as json_file:

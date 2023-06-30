@@ -17,7 +17,7 @@ class subProduct(SubmodelElementCollection):
 
 
 class ProductData(Submodel):
-    material_type: str
+    product_type: str
     processes: Union[List[str], str]
     transport_process: str
 
@@ -34,6 +34,6 @@ class ProcessReference(Submodel):
 class Product(AAS):
     bom: BOM
     process_reference: ProcessReference
-    material_data: ProductData    
+    product_data: ProductData    
 
 
