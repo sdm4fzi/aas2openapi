@@ -15,6 +15,10 @@ class subProduct(SubmodelElementCollection):
     quantity: str
     subProductAttributes: Optional[List[SubmodelElementCollection]]
 
+class Product(AAS):
+    bom: BOM
+    process_reference: ProcessReference
+    product_data: ProductData
 
 class ProductData(Submodel):
     product_type: str
@@ -29,11 +33,6 @@ class BOM(Submodel):
 
 class ProcessReference(Submodel):
     process_id: str
-    process_type: str
-    
-class Product(AAS):
-    bom: BOM
-    process_reference: ProcessReference
-    product_data: ProductData    
+    process_type: str    
 
 
