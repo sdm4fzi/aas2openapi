@@ -1,0 +1,33 @@
+{
+  "modelType": "AssetAdministrationShell",
+  "assetInformation": {
+    "assetKind": "Instance"
+  },
+  "submodels": [],
+  "id": "Example_asfdProduct",
+  "idShort": "ebertod",
+  "embeddedDataSpecifications": [
+    {
+      "dataSpecification": {
+        "keys": [
+          {
+            "type": "GlobalReference",
+            "value": "Product"
+          }
+        ],
+        "type": "ExternalReference"
+      },
+      "dataSpecificationContent": {
+        "modelType": "DataSpecificationIec61360",
+        "value": "Product",
+        "valueFormat": "xs:string",
+        "preferredName": [
+          {
+            "language": "en",
+            "text": "class_name"
+          }
+        ]
+      }
+    }
+  ]
+}

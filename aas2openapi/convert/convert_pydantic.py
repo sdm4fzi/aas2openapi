@@ -221,7 +221,7 @@ class ClientModel(BaseModel):
         data: dict = json.loads(basyx_json_string)
         # if isinstance(self.basyx_object, model.AssetAdministrationShell):
         #     data = rename_assetKind(data)
-        data = rename_data_specifications(data)
+        data = rename_data_specifications_for_aas_repository(data)
                 
         return data
     
@@ -236,7 +236,7 @@ def rename_assetKind(data: dict) -> dict:
         data["assetInformation"]["assetKind"] = AssetInformationAssetKind.TYPE
     return data
 
-def rename_data_specifications(dictionary: dict):
+def rename_data_specifications_for_aas_repository(dictionary: dict):
     for key, value in dictionary.items():
         if key == "embeddedDataSpecifications":
             for data_spec in value:
@@ -245,9 +245,25 @@ def rename_data_specifications(dictionary: dict):
                 if data_spec["dataSpecificationContent"]["modelType"] == "DataSpecificationIEC61360":
                     data_spec["dataSpecificationContent"]["modelType"] = "DataSpecificationIec61360"
         elif isinstance(value, dict):
-            rename_data_specifications(value)
+            rename_data_specifications_for_aas_repository(value)
         elif isinstance(value, list):
             for item in value:
                 if isinstance(item, dict):
-                    rename_data_specifications(item)
+                    rename_data_specifications_for_aas_repository(item)
+    return dictionary
+
+def rename_data_specifications_for_basyx(dictionary: dict):
+    for key, value in dictionary.items():
+        if key == "embeddedDataSpecifications":
+            for data_spec in value:
+                if data_spec["dataSpecification"]["type"] == "ExternalReference":
+                    data_spec["dataSpecification"]["type"] = "GlobalReference"
+                if data_spec["dataSpecificationContent"]["modelType"] == "DataSpecificationIec61360":
+                    data_spec["dataSpecificationContent"]["modelType"] = "DataSpecificationIEC61360"
+        elif isinstance(value, dict):
+            rename_data_specifications_for_basyx(value)
+        elif isinstance(value, list):
+            for item in value:
+                if isinstance(item, dict):
+                    rename_data_specifications_for_basyx(item)
     return dictionary
