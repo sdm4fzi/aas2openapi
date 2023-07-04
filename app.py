@@ -225,6 +225,19 @@ async def get_all_submodels_from_server() -> List[base.Submodel]:
     return model_data
 
 
+async def get_submodel_from_aas_id_and_class_name(aas_id: str, class_name: str) -> base.Submodel:
+    basyx_aas = await get_basyx_aas_from_server(aas_id)
+    for basyx_submodel in basyx_aas.submodel:
+        submodel_id = basyx_submodel.key[0].value
+        submodel = await get_submodel_from_server(submodel_id)
+        if submodel.__class__.__name__ == class_name:
+            return submodel
+    raise HTTPException(
+        status_code=400,
+        detail=f"Submodel with name {class_name} does not exist for AAS with id {aas_id}",
+    )
+
+
 async def delete_submodel_from_server(submodel_id: str):
     client = SMClient("http://localhost:8082")
     base_64_id = client_utils.get_base64_from_string(submodel_id)
@@ -238,33 +251,23 @@ def generate_submodel_endpoints_from_model(
 ):
     model_name = pydantic_model.__name__
     submodel_name = submodel.__name__
-
     @app.get(
         f"/{model_name}/{{item_id}}/{submodel_name}/",
         tags=[submodel_name],
         response_model=submodel,
     )
     async def get_item(item_id: str):
-        aas = await get_basyx_aas_from_server(item_id)
-        for sm in aas.submodel:
-            submodel_id = sm.key[0].value
-            submodel = await get_submodel_from_server(submodel_id)
-            if submodel.__class__.__name__ == submodel_name:
-                return submodel
-        raise HTTPException(
-            status_code=400,
-            detail=f"Submodel with name {submodel_name} does not exist for AAS with id {item_id}",
-        )
+        return await get_submodel_from_aas_id_and_class_name(item_id, submodel_name)
     
     @app.delete(f"/{model_name}/{{item_id}}/{submodel_name}", tags=[submodel_name])
     async def delete_item(item_id: str):
-        # TODO: test
-        await delete_submodel_from_server(item_id)
+        submodel = await get_submodel_from_aas_id_and_class_name(item_id, submodel_name)
+        await delete_submodel_from_server(submodel.id_)
         return {"message": f"Succesfully deleted submodel with id {item_id}"}
 
     @app.put(f"/{model_name}/{{item_id}}/{submodel_name}", tags=[submodel_name])
     async def put_item(item_id: str, item: submodel) -> Dict[str, str]:
-        # TODO: test
+        submodel = await get_submodel_from_aas_id_and_class_name(item_id, submodel_name)
         await put_submodel_to_server(item)
         return {"message": f"Succesfully updated submodel with id {item_id}"}
 
@@ -273,10 +276,15 @@ def generate_submodel_endpoints_from_model(
         tags=[submodel_name],
         response_model=submodel,
     )
-    async def post_item(item: submodel) -> Dict[str, str]:
-        # TODO: test
-        await post_submodel_to_server(item)
-        return item
+    async def post_item(item_id: str, item: submodel) -> Dict[str, str]:
+        try:
+            await get_submodel_from_aas_id_and_class_name(item_id, submodel_name)
+        except HTTPException as e:
+            if e.status_code == 400:
+                await post_submodel_to_server(item)
+                return item
+            else:
+                raise e
 
 
 def generate_endpoints_from_model(pydantic_model: Type[BaseModel]):
@@ -338,5 +346,13 @@ def generate_fastapi_app(json_file: str):
         generate_endpoints_from_instances(models)
 
 
-# Example usage
+# Example usage to generate endpoints from a json file (models need to exist and be provided in all_types variable)
 generate_fastapi_app("model.json")
+
+# Example usage to generate endpoints from a list of instances
+# generate_endpoints_from_instances([product.Product(id_="test", name="test", ...)])
+
+# Example usage to generate endpoints from a list of types 
+# generate_endpoints_from_model([product.Product])
+
+
