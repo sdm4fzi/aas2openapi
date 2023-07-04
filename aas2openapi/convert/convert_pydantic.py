@@ -19,6 +19,7 @@ def get_vars(obj: object) -> dict:
     vars_dict = {key: value for key, value in vars_dict.items() if key != "id_"}
     vars_dict = {key: value for key, value in vars_dict.items() if key != "description"}
     vars_dict = {key: value for key, value in vars_dict.items() if key != "id_short"}
+    vars_dict = {key: value for key, value in vars_dict.items() if key != "semantic_id"}
     return vars_dict
 
 
@@ -69,6 +70,14 @@ def get_id_short(element: Union[base.Submodel, base.SubmodelElementCollection]) 
     else:
         return element.id_
 
+def get_semantic_id(pydantic_model: base.Submodel | base.SubmodelElementCollection) -> str | None:
+    if pydantic_model.semantic_id:
+        semantic_id = model.GlobalReference(
+            key=(model.Key(model.KeyTypes.GLOBAL_REFERENCE, pydantic_model.semantic_id), )
+        )
+    else:
+        semantic_id = None
+    return semantic_id
 
 def convert_pydantic_model_to_submodel(
     pydantic_submodel: base.Submodel,
@@ -80,6 +89,7 @@ def convert_pydantic_model_to_submodel(
         embedded_data_specifications=[
             convert_util.get_data_specification_for_pydantic_model(pydantic_submodel)
         ],
+        semantic_id=get_semantic_id(pydantic_submodel),
     )
 
     submodel_attributes = get_vars(pydantic_submodel)
@@ -178,6 +188,7 @@ def create_submodel_element_collection(
         embedded_data_specifications=[
             convert_util.get_data_specification_for_attribute_name(name)
         ],
+        semantic_id=get_semantic_id(pydantic_submodel_element_collection),
     )
     return smc
 
@@ -219,9 +230,8 @@ class ClientModel(BaseModel):
             self.basyx_object, cls=basyx.aas.adapter.json.AASToJsonEncoder
         )
         data: dict = json.loads(basyx_json_string)
-        # if isinstance(self.basyx_object, model.AssetAdministrationShell):
-        #     data = rename_assetKind(data)
         data = rename_data_specifications_for_aas_repository(data)
+        data = rename_semantic_id_for_aas_repository(data)
                 
         return data
     
@@ -231,7 +241,6 @@ def rename_assetKind(data: dict) -> dict:
         raise ValueError("No assetKind found in item:", data)
     if data["assetInformation"]["assetKind"] == "Instance":
         data["assetInformation"]["assetKind"] = AssetInformationAssetKind.INSTANCE
-        print("renamed assetKind to", data["assetInformation"]["assetKind"])
     elif data["assetInformation"]["assetKind"] == "Type":
         data["assetInformation"]["assetKind"] = AssetInformationAssetKind.TYPE
     return data
@@ -252,7 +261,20 @@ def rename_data_specifications_for_aas_repository(dictionary: dict):
                     rename_data_specifications_for_aas_repository(item)
     return dictionary
 
-def rename_data_specifications_for_basyx(dictionary: dict):
+def rename_semantic_id_for_aas_repository(dictionary: dict):
+    for key, value in dictionary.items():
+        if key == "semanticId":
+            if value["type"] == "GlobalReference":
+                value["type"] = "ExternalReference"
+        elif isinstance(value, dict):
+            rename_semantic_id_for_aas_repository(value)
+        elif isinstance(value, list):
+            for item in value:
+                if isinstance(item, dict):
+                    rename_semantic_id_for_aas_repository(item)
+    return dictionary
+
+def rename_data_specifications_for_basyx(dictionary: dict) -> None:
     for key, value in dictionary.items():
         if key == "embeddedDataSpecifications":
             for data_spec in value:
@@ -266,4 +288,36 @@ def rename_data_specifications_for_basyx(dictionary: dict):
             for item in value:
                 if isinstance(item, dict):
                     rename_data_specifications_for_basyx(item)
-    return dictionary
+
+
+def rename_semantic_id_for_basyx(dictionary: dict):
+    for key, value in dictionary.items():
+        if key == "semanticId":
+            if value["type"] == "ExternalReference":
+                value["type"] = "GlobalReference"
+        elif isinstance(value, dict):
+            rename_semantic_id_for_basyx(value)
+        elif isinstance(value, list):
+            for item in value:
+                if isinstance(item, dict):
+                    rename_semantic_id_for_basyx(item)
+    
+
+
+def remove_empty_lists(dictionary: dict) -> None:
+    keys_to_remove = []
+    for key, value in dictionary.items():
+        if isinstance(value, dict):
+            # Recursively process nested dictionaries
+            remove_empty_lists(value)
+            # if not value:
+            #     keys_to_remove.append(key)
+        elif isinstance(value, list) and value:
+            # Recursively process nested lists
+            for item in value:
+                if isinstance(item, dict):
+                    remove_empty_lists(item)
+        elif isinstance(value, list) and not value:
+            keys_to_remove.append(key)
+    for key in keys_to_remove:
+        del dictionary[key]

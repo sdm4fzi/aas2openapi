@@ -29,7 +29,7 @@ from ba_syx_submodel_repository_client.api.submodel_repository_api import (
 )
 
 import aas2openapi
-from aas2openapi.convert.convert_pydantic import ClientModel, get_vars, rename_data_specifications_for_basyx
+from aas2openapi.convert.convert_pydantic import ClientModel, get_vars, rename_data_specifications_for_basyx, rename_semantic_id_for_basyx, remove_empty_lists
 from aas2openapi.models import base, product, processes
 from aas2openapi.util import client_utils
 
@@ -37,6 +37,7 @@ app = FastAPI()
 
 all_types = Union[product.Product, processes.ProcessData]
 
+# TODO: refactor this file for utils, routers and convenience functions needed to generate the server
 
 def create_pydantic_model(model_definition):
     return parse_obj_as(all_types, model_definition)
@@ -91,7 +92,6 @@ async def post_aas_to_server(aas: base.AAS):
 
     aas_attributes = get_vars(aas)
     for submodel in aas_attributes.values():
-        print(type(submodel), submodel)
         await post_submodel_to_server(submodel)
 
 
@@ -114,13 +114,22 @@ async def put_aas_to_server(aas: base.AAS):
         put_submodel_to_server(submodel)
 
 
-async def get_aas_from_server(aas_id: str) -> base.AAS:
+async def get_basyx_aas_from_server(aas_id: str) -> model.AssetAdministrationShell:
     client = AASClient("http://localhost:8081")
     base_64_id = client_utils.get_base64_from_string(aas_id)
     aas_data = await get_asset_administration_shell_by_id.asyncio(
-            client=client, aas_identifier=base_64_id
+        client=client, aas_identifier=base_64_id
     )
-    model_data = aas2openapi.convert_object_store_to_pydantic_models(aas_data).pop()
+    return transform_client_to_basyx_model(aas_data.to_dict())
+
+async def get_aas_from_server(aas_id: str) -> base.AAS:
+    aas = await get_basyx_aas_from_server(aas_id)
+    aas_submodels = await get_all_basyx_submodels_from_server(aas)
+    obj_store = model.DictObjectStore()
+    obj_store.add(aas)
+    [obj_store.add(submodel) for submodel in aas_submodels]
+
+    model_data = aas2openapi.convert_object_store_to_pydantic_models(obj_store).pop()
     return model_data
 
 
@@ -132,29 +141,41 @@ async def delete_aas_from_server(aas_id: str):
     )
 
 
-def prepare_basyx_aas(model: dict) -> Union[model.AssetAdministrationShell, model.Submodel]:
-    model = rename_data_specifications_for_basyx(model)
-    model = json.dumps(model, indent=4)
-    model = json.loads(model, cls=basyx.aas.adapter.json.AASFromJsonDecoder)
-    return model
+def transform_client_to_basyx_model(response_model: dict) -> Union[model.AssetAdministrationShell, model.Submodel]:
+    rename_data_specifications_for_basyx(response_model)
+    rename_semantic_id_for_basyx(response_model)
+    remove_empty_lists(response_model)
+    json_model = json.dumps(response_model, indent=4)
+    basyx_model = json.loads(json_model, cls=basyx.aas.adapter.json.AASFromJsonDecoder)
+    return basyx_model
+
+async def get_basyx_submodel_from_server(submodel_id: str) -> model.Submodel:
+    client = SMClient("http://localhost:8082")
+    base_64_id = client_utils.get_base64_from_string(submodel_id)
+    submodel_data = await get_submodel_by_id.asyncio(
+        client=client, submodel_identifier=base_64_id
+    )
+    return transform_client_to_basyx_model(submodel_data.to_dict())
+
+
+async def get_all_basyx_submodels_from_server(aas: model.AssetAdministrationShell) -> List[model.Submodel]:
+    submodels = []
+    for submodel_reference in aas.submodel:
+        basyx_submodel = await get_basyx_submodel_from_server(submodel_reference.key[0].value)
+        submodels.append(basyx_submodel)
+    return submodels
 
 
 async def get_all_aas_from_server() -> List[base.AAS]:
     client = AASClient("http://localhost:8081")
     result_string = await get_all_asset_administration_shells.asyncio(client=client)
     aas_data = result_string["result"]
-    aas_list = [prepare_basyx_aas(aas) for aas in aas_data]
+    aas_list = [transform_client_to_basyx_model(aas) for aas in aas_data]
 
     submodels = []
     for aas in aas_list:
-        for submodel in aas.submodel:
-            client = SMClient("http://localhost:8082")
-            base_64_id = client_utils.get_base64_from_string(submodel.key[0].value)
-            print(base_64_id, submodel.key[0].value)
-            submodel_data = await get_submodel_by_id.asyncio(
-                client=client, submodel_identifier=base_64_id
-            )
-            submodels.append(prepare_basyx_aas(submodel_data))
+        aas_submodels = await get_all_basyx_submodels_from_server(aas)
+        submodels.extend(aas_submodels)
     obj_store = model.DictObjectStore()
     [obj_store.add(aas) for aas in aas_list]
     [obj_store.add(submodel) for submodel in submodels]
@@ -190,12 +211,8 @@ async def put_submodel_to_server(submodel: base.Submodel):
 
 
 async def get_submodel_from_server(submodel_id: str) -> base.Submodel:
-    client = SMClient("http://localhost:8082")
-    base_64_id = client_utils.get_base64_from_string(submodel_id)
-    submodel_data = await get_submodel_by_id.asyncio(
-        client=client, submodel_identifier=base_64_id
-    )
-    model_data = aas2openapi.convert_sm_to_pydantic_model(submodel_data)
+    basyx_submodel = await get_basyx_submodel_from_server(submodel_id)    
+    model_data = aas2openapi.convert_sm_to_pydantic_model(basyx_submodel)
     return model_data
 
 
@@ -228,16 +245,26 @@ def generate_submodel_endpoints_from_model(
         response_model=submodel,
     )
     async def get_item(item_id: str):
-        submodel = await get_submodel_from_server(item_id)
-        return submodel
-
+        aas = await get_basyx_aas_from_server(item_id)
+        for sm in aas.submodel:
+            submodel_id = sm.key[0].value
+            submodel = await get_submodel_from_server(submodel_id)
+            if submodel.__class__.__name__ == submodel_name:
+                return submodel
+        raise HTTPException(
+            status_code=400,
+            detail=f"Submodel with name {submodel_name} does not exist for AAS with id {item_id}",
+        )
+    
     @app.delete(f"/{model_name}/{{item_id}}/{submodel_name}", tags=[submodel_name])
     async def delete_item(item_id: str):
+        # TODO: test
         await delete_submodel_from_server(item_id)
         return {"message": f"Succesfully deleted submodel with id {item_id}"}
 
     @app.put(f"/{model_name}/{{item_id}}/{submodel_name}", tags=[submodel_name])
     async def put_item(item_id: str, item: submodel) -> Dict[str, str]:
+        # TODO: test
         await put_submodel_to_server(item)
         return {"message": f"Succesfully updated submodel with id {item_id}"}
 
@@ -247,6 +274,7 @@ def generate_submodel_endpoints_from_model(
         response_model=submodel,
     )
     async def post_item(item: submodel) -> Dict[str, str]:
+        # TODO: test
         await post_submodel_to_server(item)
         return item
 
@@ -256,11 +284,7 @@ def generate_endpoints_from_model(pydantic_model: Type[BaseModel]):
 
     @app.get(f"/{model_name}/", tags=[model_name], response_model=List[pydantic_model])
     async def get_items():
-        print("get_items")
         data_retrieved = await get_all_aas_from_server()
-        print(data_retrieved)
-        # TODO: rework this to work correctly!
-        data_retrieved = []
         return data_retrieved
 
     @app.get(
@@ -272,23 +296,23 @@ def generate_endpoints_from_model(pydantic_model: Type[BaseModel]):
 
     @app.delete(f"/{model_name}/{{item_id}}", tags=[model_name])
     async def delete_item(item_id: str):
+        # TODO: test
         await delete_aas_from_server(item_id)
         return {"message": "Item deleted"}
 
     @app.put(f"/{model_name}/{{item_id}}", tags=[model_name])
     async def put_item(item_id: str, item: pydantic_model) -> Dict[str, str]:
+        # TODO: test
         await put_aas_to_server(item)
         return {"message": "Item updated"}
 
     @app.post(f"/{model_name}/", tags=[model_name], response_model=pydantic_model)
     async def post_item(item: pydantic_model) -> Dict[str, str]:
-        print("post_item")
         await post_aas_to_server(item)
         return item
 
     submodels = get_all_submodels_from_model(pydantic_model)
     for submodel in submodels:
-        print(submodel)
         generate_submodel_endpoints_from_model(
             pydantic_model=pydantic_model, submodel=submodel
         )

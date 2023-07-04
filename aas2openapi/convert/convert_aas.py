@@ -84,24 +84,45 @@ def convert_submodel_element_to_named_dict(sm_element: model.SubmodelElement) ->
     return {
         attribute_name: attribute_value
     }
+
+
+def get_semantic_id_value_of_model(sm: typing.Union[model.Submodel, model.SubmodelElement]) -> str:
+    """
+    Returns the semantic id of a submodel or submodel element.
+    """
+    if isinstance(sm, model.Submodel):
+        if not sm.semantic_id:
+            return ""
+        return sm.semantic_id.key[0].value
+    elif isinstance(sm, model.SubmodelElement):
+        if not sm.semantic_id:
+            return ""
+        return sm.semantic_id.key[0].value
+    else:
+        raise NotImplementedError("Type not implemented:", type(sm))
             
 def convert_sm_to_pydantic_model(sm: model.Submodel) -> base.Submodel:
     """
     Converts a Submodel to a Pydantic model.
     """
+    import basyx.aas.adapter.json.json_serialization
+    import json
+    basyx_json_string = json.dumps(
+            sm, cls=basyx.aas.adapter.json.AASToJsonEncoder
+        )
+    print(basyx_json_string)
     class_name = convert_util.get_class_name_from_basyx_model(sm)
-    # TODO: fix semantic_id
     pydantic_base_aas = base.Submodel(
         id_=str(sm.id),
         id_short=sm.id_short,
         description=convert_util.get_str_description(sm.description),
-        semantic_id=""
+        semantic_id=get_semantic_id_value_of_model(sm)
     )
     dict_pydantic_base_submodel = pydantic_base_aas.dict()
     for sm_element in sm.submodel_element:
         dict_sme = convert_submodel_element_to_named_dict(sm_element)
         dict_pydantic_base_submodel.update(dict_sme)
-
+    print(dict_pydantic_base_submodel)
     model_type = create_model(class_name, **dict_pydantic_base_submodel, __base__=base.Submodel)
     return model_type(**dict_pydantic_base_submodel)
 
@@ -110,11 +131,12 @@ def convert_submodel_collection_to_pydantic_model(sm_element: model.SubmodelElem
     """
     Converts a SubmodelElementCollection to a Pydantic model.
     """
-    class_name = convert_util.get_class_name_from_basyx_model(sm_element)
+    attribute_name = convert_util.get_attribute_name_of_basyx_model(sm_element)
+    class_name = convert_util.convert_under_score_to_camel_case_str(attribute_name)
     sme_pydantic_model = base.SubmodelElementCollection(
         id_short=sm_element.id_short,
         description=convert_util.get_str_description(sm_element.description),
-        semantic_id=""
+        semantic_id=get_semantic_id_value_of_model(sm_element)
     )
     dict_pydantic_base_submodel = sme_pydantic_model.dict()
     for sm_element in sm_element.value:

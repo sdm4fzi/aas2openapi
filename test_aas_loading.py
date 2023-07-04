@@ -4,15 +4,13 @@ import basyx
 import basyx.aas.adapter.json
 import json
 
-from aas2openapi.convert.convert_pydantic import rename_data_specifications_for_basyx
+from aas2openapi.convert.convert_pydantic import rename_data_specifications_for_basyx, rename_semantic_id_for_basyx
 
+with open("examplaaaa.json", "r", encoding="utf-8") as json_file:
+    aas_dict = json.load(json_file)
 
-with open('aas_data.json', encoding='utf-8-sig') as json_file:
-    file = json.load(json_file)
-    file = rename_data_specifications_for_basyx(file)
-    file = json.dumps(file, indent=4)
-    print(file)
-    json_file_data = json.loads(file, cls=basyx.aas.adapter.json.AASFromJsonDecoder)
+rename_semantic_id_for_basyx(aas_dict)
+rename_data_specifications_for_basyx(aas_dict)
 
-print(json_file_data)
-for el in json_file_data:
+print(json.dumps(aas_dict, indent=4))
+

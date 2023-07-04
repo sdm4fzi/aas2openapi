@@ -8,9 +8,9 @@
                 "id_": "Example_Bom_Submodel",
                 "description": "this is an example",
                 "id_short": "cd",
-                "semantic_id": "http://www.google.de3",
+                "semantic_id": "www.google.de3",
                 "assembly": "assembly",
-                "subProductCount": "http://193.196.37.23:4001/aasServer/shells/AAS_caesar_id/aas",
+                "subProductCount": "193.196.37.23:4001/aasServer/shells/AAS_caesar_id/aas",
                 "subProduct": [
                     {
                         "description": "xyz",

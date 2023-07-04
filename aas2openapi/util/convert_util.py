@@ -20,6 +20,20 @@ def convert_camel_case_to_underscrore_str(came_case_string: str) -> str:
     new_class_name = re.sub(r"(?<!^)(?=[A-Z])", "_", came_case_string).lower()
     return new_class_name
 
+def convert_under_score_to_camel_case_str(underscore_str: str) -> str:
+    """
+    Convert a underscore seperated string to a camel case string.
+
+    Args:
+        class_name (str): The underscore seperated string to convert.
+
+    Returns:
+        str: The camel case string.
+    """
+    words = underscore_str.split('_')
+    camel_case_str = ''.join(word.title() for word in words)
+    return camel_case_str
+
 
 def save_model_list_with_schema(model_list: typing.List[BaseModel], path: str):
     """
@@ -48,10 +62,12 @@ def get_class_name_from_basyx_model(item: model.HasDataSpecification) -> str:
     if not item.embedded_data_specifications:
         raise ValueError("No data specifications found in item:", item)
     for data_spec in item.embedded_data_specifications:
-        if isinstance(data_spec, model.DataSpecificationIEC61360):
-            for value in data_spec.preferred_name.values():
+        content = data_spec.data_specification_content
+        if isinstance(content, model.DataSpecificationIEC61360):
+            for value in content.preferred_name.values():
                 if value == "class_name":
-                    return data_spec.value
+                    return content.value
+    raise ValueError("No class name found in item:", item, type(item), item.id_short)
 
 
 def get_attribute_name_of_basyx_model(item: model.HasDataSpecification) -> str:
@@ -67,10 +83,12 @@ def get_attribute_name_of_basyx_model(item: model.HasDataSpecification) -> str:
     if not item.embedded_data_specifications:
         raise ValueError("No data specifications found in item:", item)
     for data_spec in item.embedded_data_specifications:
-        if isinstance(data_spec, model.DataSpecificationIEC61360):
-            for value in data_spec.preferred_name.values():
+        content = data_spec.data_specification_content
+        if isinstance(content, model.DataSpecificationIEC61360):
+            for value in content.preferred_name.values():
                 if value == "attribute_name":
-                    return data_spec.value
+                    return content.value
+    raise ValueError("No attribute name found in item:", item)
 
 
 def get_str_description(langstring_set: model.LangStringSet) -> str:
