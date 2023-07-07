@@ -1,9 +1,12 @@
 import json
 import re
+from typing import List, Type
 from basyx.aas import model
 
 from pydantic import BaseModel
 import typing
+
+from aas2openapi.models import base
 
 
 def convert_camel_case_to_underscrore_str(came_case_string: str) -> str:
@@ -144,3 +147,35 @@ def get_data_specification_for_attribute_name(
             value=attribute_name,
         ),
     )
+
+
+def get_all_submodels_from_model(model: Type[BaseModel]) -> List[model.Submodel]:
+    """
+    Function to get all submodels from a pydantic model
+    Args:
+        model (Type[BaseModel]): The pydantic model to get the submodels from
+    Returns:
+        List[model.Submodel]: A list of all submodels in the pydantic model
+    """
+    submodels = []
+    for field in model.__fields__.values():
+        if issubclass(field.type_, base.Submodel):
+            submodels.append(field.type_)
+    return submodels
+
+
+def get_all_submodels_from_object_store(
+    obj_store: model.DictObjectStore,
+) -> List[model.Submodel]:
+    """
+    Function to get all basyx submodels from an object store
+    Args:
+        obj_store (model.DictObjectStore): Object store to get submodels from
+    Returns:
+        List[model.Submodel]: List of basyx submodels
+    """
+    submodels = []
+    for item in obj_store:
+        if isinstance(item, model.Submodel):
+            submodels.append(item)
+    return submodels
