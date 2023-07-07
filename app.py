@@ -105,7 +105,7 @@ async def put_aas_to_server(aas: base.AAS):
     aas_for_client = ClientModel(basyx_object=basyx_aas)
     client = AASClient("http://localhost:8081")
     base_64_id = client_utils.get_base64_from_string(aas.id_)
-    response = await delete_asset_administration_shell_by_id.asyncio(
+    await put_asset_administration_shell_by_id.asyncio(
         aas_identifier=base_64_id, client=client, json_body=aas_for_client
     )
 
@@ -117,10 +117,15 @@ async def put_aas_to_server(aas: base.AAS):
 async def get_basyx_aas_from_server(aas_id: str) -> model.AssetAdministrationShell:
     client = AASClient("http://localhost:8081")
     base_64_id = client_utils.get_base64_from_string(aas_id)
-    aas_data = await get_asset_administration_shell_by_id.asyncio(
-        client=client, aas_identifier=base_64_id
-    )
-    return transform_client_to_basyx_model(aas_data.to_dict())
+    try:
+        aas_data = await get_asset_administration_shell_by_id.asyncio(
+            client=client, aas_identifier=base_64_id
+        )
+        return transform_client_to_basyx_model(aas_data.to_dict())
+    except Exception as e:
+        raise HTTPException(
+            status_code=400, detail=f"AAS with id {aas_id} does not exist"
+        )
 
 async def get_aas_from_server(aas_id: str) -> base.AAS:
     aas = await get_basyx_aas_from_server(aas_id)
@@ -178,7 +183,7 @@ async def get_all_aas_from_server() -> List[base.AAS]:
         submodels.extend(aas_submodels)
     obj_store = model.DictObjectStore()
     [obj_store.add(aas) for aas in aas_list]
-    [obj_store.add(submodel) for submodel in submodels]
+    [obj_store.add(submodel) for submodel in submodels if not any(submodel.id == other_sm.id for other_sm in submodels)]
     
     model_data = aas2openapi.convert_object_store_to_pydantic_models(obj_store)
     return model_data
@@ -304,13 +309,12 @@ def generate_endpoints_from_model(pydantic_model: Type[BaseModel]):
 
     @app.delete(f"/{model_name}/{{item_id}}", tags=[model_name])
     async def delete_item(item_id: str):
-        # TODO: test
         await delete_aas_from_server(item_id)
         return {"message": "Item deleted"}
 
     @app.put(f"/{model_name}/{{item_id}}", tags=[model_name])
     async def put_item(item_id: str, item: pydantic_model) -> Dict[str, str]:
-        # TODO: test
+        # TODO: rework update of description on post and put
         await put_aas_to_server(item)
         return {"message": "Item updated"}
 
