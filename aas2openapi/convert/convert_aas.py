@@ -105,12 +105,6 @@ def convert_sm_to_pydantic_model(sm: model.Submodel) -> base.Submodel:
     """
     Converts a Submodel to a Pydantic model.
     """
-    import basyx.aas.adapter.json.json_serialization
-    import json
-    basyx_json_string = json.dumps(
-            sm, cls=basyx.aas.adapter.json.AASToJsonEncoder
-        )
-    print(basyx_json_string)
     class_name = convert_util.get_class_name_from_basyx_model(sm)
     pydantic_base_aas = base.Submodel(
         id_=str(sm.id),
@@ -122,7 +116,6 @@ def convert_sm_to_pydantic_model(sm: model.Submodel) -> base.Submodel:
     for sm_element in sm.submodel_element:
         dict_sme = convert_submodel_element_to_named_dict(sm_element)
         dict_pydantic_base_submodel.update(dict_sme)
-    print(dict_pydantic_base_submodel)
     model_type = create_model(class_name, **dict_pydantic_base_submodel, __base__=base.Submodel)
     return model_type(**dict_pydantic_base_submodel)
 

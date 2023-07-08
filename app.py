@@ -80,12 +80,12 @@ def generate_endpoints_from_model(pydantic_model: Type[BaseModel]):
 
     @app.put(f"/{model_name}/{{item_id}}", tags=[model_name])
     async def put_item(item_id: str, item: pydantic_model) -> Dict[str, str]:
-        # TODO: rework update of description on post and put
         await put_aas_to_server(item)
         return {"message": "Item updated"}
 
     @app.post(f"/{model_name}/", tags=[model_name], response_model=pydantic_model)
     async def post_item(item: pydantic_model) -> Dict[str, str]:
+        # TODO: decide if reference on existing submodel should be updated or a an error is raised.
         await post_aas_to_server(item)
         return item
 
@@ -125,4 +125,8 @@ generate_fastapi_app("model.json")
 # Example usage to generate endpoints from a list of types 
 # generate_endpoints_from_model([product.Product])
 
+if __name__ == "__main__":
+    import uvicorn
+
+    uvicorn.run(app)
 

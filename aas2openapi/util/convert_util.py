@@ -1,7 +1,8 @@
 import json
 import re
-from typing import List, Type
+from typing import List, Type, Dict
 from basyx.aas import model
+import ast
 
 from pydantic import BaseModel
 import typing
@@ -107,8 +108,27 @@ def get_str_description(langstring_set: model.LangStringSet) -> str:
     dict_description = {}
     for langstring in langstring_set:
         dict_description[langstring] = langstring_set[langstring]
-    str_description = str(dict_description)
-    return str_description
+    return str(dict_description)
+
+
+def get_basyx_description_from_pydantic_model(pydantic_model: base.AAS | base.Submodel | base.SubmodelElementCollection) -> model.LangStringSet:
+    """
+    Crreates a LangStringSet from a pydantic model.
+    Args:
+        pydantic_model (BaseModel): Pydantic model that contains the description
+    Returns:
+        model.LangStringSet: LangStringSet description representation of the pydantic model
+    Raises:
+        ValueError: If the description of the pydantic model is not a dict or a string
+    """
+    try:
+        dict_description = json.loads(pydantic_model.description)
+        if not isinstance(dict_description, dict):
+            raise ValueError
+    except ValueError:
+        dict_description = {"en": pydantic_model.description}
+    return model.LangStringSet(dict_description)
+
 
 
 def get_data_specification_for_pydantic_model(

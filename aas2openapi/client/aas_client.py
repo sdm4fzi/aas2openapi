@@ -160,7 +160,7 @@ async def get_all_aas_from_server() -> List[base.AAS]:
         submodels.extend(aas_submodels)
     obj_store = model.DictObjectStore()
     [obj_store.add(aas) for aas in aas_list]
-    [obj_store.add(submodel) for submodel in submodels if not any(submodel.id == other_sm.id for other_sm in submodels)]
+    [obj_store.add(submodel) for submodel in submodels if not any(submodel.id == other_sm.id for other_sm in obj_store)]
 
     model_data = aas2openapi.convert_object_store_to_pydantic_models(obj_store)
     return model_data

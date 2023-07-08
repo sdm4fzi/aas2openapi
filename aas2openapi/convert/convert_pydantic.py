@@ -50,6 +50,7 @@ def convert_pydantic_model_to_aas(
         asset_information=asset_information,
         id_short=pydantic_aas.id_short,
         id_=model.Identifier(pydantic_aas.id_),
+        description=convert_util.get_basyx_description_from_pydantic_model(pydantic_aas),
         submodel={
             model.ModelReference.from_referable(submodel) for submodel in aas_submodels
         },
@@ -85,7 +86,7 @@ def convert_pydantic_model_to_submodel(
     basyx_submodel = model.Submodel(
         id_short=get_id_short(pydantic_submodel),
         id_=model.Identifier(pydantic_submodel.id_),
-        description=model.LangStringSet({"en": pydantic_submodel.description}),
+        description=convert_util.get_basyx_description_from_pydantic_model(pydantic_submodel),
         embedded_data_specifications=[
             convert_util.get_data_specification_for_pydantic_model(pydantic_submodel)
         ],
@@ -185,6 +186,7 @@ def create_submodel_element_collection(
     smc = model.SubmodelElementCollection(
         id_short=pydantic_submodel_element_collection.id_short,
         value=value,
+        description=convert_util.get_basyx_description_from_pydantic_model(pydantic_submodel_element_collection),
         embedded_data_specifications=[
             convert_util.get_data_specification_for_attribute_name(name)
         ],
