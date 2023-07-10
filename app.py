@@ -96,12 +96,19 @@ def generate_endpoints_from_model(pydantic_model: Type[BaseModel]):
         )
 
 
-def generate_endpoints_from_instances(instances: List[BaseModel]):
-    items = []
-    model_name = type(instances[0]).__name__
-    pydantic_model = create_model(model_name, **vars(instances[0]))
+def generate_endpoints_from_models(models: List[Type[BaseModel]]):
+    for model in models:
+        generate_endpoints_from_model(model)
 
-    generate_endpoints_from_model(pydantic_model)
+
+def generate_endpoints_from_instances(instances: List[BaseModel]):
+    models = []
+    for instance in instances:
+        model_name = type(instance).__name__
+        pydantic_model = create_model(model_name, **vars(instance))
+        models.append(pydantic_model)
+
+    generate_endpoints_from_models(pydantic_model)
 
 
 def generate_fastapi_app(json_file: str):
@@ -117,13 +124,13 @@ def generate_fastapi_app(json_file: str):
 
 
 # Example usage to generate endpoints from a json file (models need to exist and be provided in all_types variable)
-generate_fastapi_app("model.json")
+# generate_fastapi_app("model.json")
 
 # Example usage to generate endpoints from a list of instances
 # generate_endpoints_from_instances([product.Product(id_="test", name="test", ...)])
 
 # Example usage to generate endpoints from a list of types 
-# generate_endpoints_from_model([product.Product])
+generate_endpoints_from_models([product.Product])
 
 if __name__ == "__main__":
     import uvicorn
