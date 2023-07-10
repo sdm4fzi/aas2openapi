@@ -22,6 +22,8 @@ def convert_camel_case_to_underscrore_str(came_case_string: str) -> str:
     """
     came_case_string = came_case_string[0].lower() + came_case_string[1:]
     new_class_name = re.sub(r"(?<!^)(?=[A-Z])", "_", came_case_string).lower()
+    if all(len(el) == 1 for el in new_class_name.split('_')):
+        new_class_name = new_class_name.replace('_', '')
     return new_class_name
 
 def convert_under_score_to_camel_case_str(underscore_str: str) -> str:
