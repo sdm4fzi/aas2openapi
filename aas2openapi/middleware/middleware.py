@@ -7,6 +7,7 @@ import aas2openapi
 import json
 
 from basyx.aas import model
+from aas2openapi.middleware.graphql_routers import generate_graphql_endpoint
 from aas2openapi.middleware.rest_routers import generate_endpoints_from_model, get_pydantic_model_from_imstances
 import aas2openapi
 
@@ -93,4 +94,5 @@ class Middleware:
         """
         Generates a GraphQL API with query operations for aas' and submodels from the loaded models.
         """
-        pass
+        router = generate_graphql_endpoint(self.models)
+        self.app.include_router(router)

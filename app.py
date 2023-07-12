@@ -28,6 +28,7 @@ middleware = Middleware()
 middleware.load_pydantic_model_instances(models)
 # middleware.load_pydantic_models([product.Product, processes.ProcessData])
 middleware.generate_rest_api()
+middleware.generate_graphql_api()
 
 app = middleware.app
 
