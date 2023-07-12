@@ -30,3 +30,5 @@ middleware.load_pydantic_model_instances(models)
 middleware.generate_rest_api()
 
 app = middleware.app
+
+# Start server by running: uvicorn app:app --reload
