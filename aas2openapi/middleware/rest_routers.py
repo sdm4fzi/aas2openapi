@@ -48,18 +48,7 @@ def generate_submodel_endpoints_from_model(
     async def get_item(item_id: str):
         return await get_submodel_from_aas_id_and_class_name(item_id, submodel_name)
 
-    @router.delete("/")
-    async def delete_item(item_id: str):
-        submodel = await get_submodel_from_aas_id_and_class_name(item_id, submodel_name)
-        await delete_submodel_from_server(submodel.id_)
-        return {"message": f"Succesfully deleted submodel with id {item_id}"}
-
-    @router.put("/")
-    async def put_item(item_id: str, item: submodel) -> Dict[str, str]:
-        submodel = await get_submodel_from_aas_id_and_class_name(item_id, submodel_name)
-        await put_submodel_to_server(item)
-        return {"message": f"Succesfully updated submodel with id {item_id}"}
-
+    # TODO: only add post and delete method if the submodel is an optional field.
     @router.post(
         "/",
         response_model=submodel,
@@ -73,6 +62,19 @@ def generate_submodel_endpoints_from_model(
                 return item
             else:
                 raise e
+    
+    @router.put("/")
+    async def put_item(item_id: str, item: submodel) -> Dict[str, str]:
+        submodel = await get_submodel_from_aas_id_and_class_name(item_id, submodel_name)
+        await put_submodel_to_server(item)
+        return {"message": f"Succesfully updated submodel with id {item_id}"}
+
+    @router.delete("/")
+    async def delete_item(item_id: str):
+        submodel = await get_submodel_from_aas_id_and_class_name(item_id, submodel_name)
+        await delete_submodel_from_server(submodel.id_)
+        return {"message": f"Succesfully deleted submodel with id {item_id}"}
+
 
     return router
 
@@ -108,15 +110,16 @@ def generate_aas_endpoints_from_model(pydantic_model: Type[BaseModel]) -> APIRou
         data_retrieved = await get_aas_from_server(item_id)
         return data_retrieved
 
+    @router.put("/{item_id}")
+    async def put_item(item_id: str, item: pydantic_model) -> Dict[str, str]:
+        await put_aas_to_server(item)
+        return {"message": "Item updated"}
+
     @router.delete("/{item_id}")
     async def delete_item(item_id: str):
         await delete_aas_from_server(item_id)
         return {"message": "Item deleted"}
 
-    @router.put("/{item_id}")
-    async def put_item(item_id: str, item: pydantic_model) -> Dict[str, str]:
-        await put_aas_to_server(item)
-        return {"message": "Item updated"}
 
     return router
 

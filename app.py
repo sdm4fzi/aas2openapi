@@ -25,8 +25,8 @@ for model_definitions in models.values():
 from aas2openapi.middleware.middleware import Middleware
 
 middleware = Middleware()
-# middleware.load_pydantic_model_instances(models)
-middleware.load_pydantic_models([product.Product, processes.ProcessData])
+middleware.load_pydantic_model_instances(models)
+# middleware.load_pydantic_models([product.Product, processes.ProcessData])
 middleware.generate_rest_api()
 
 app = middleware.app

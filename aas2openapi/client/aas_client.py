@@ -6,7 +6,7 @@ from basyx.aas import model
 from dotenv import load_dotenv
 
 import aas2openapi
-from aas2openapi.client.submodel_client import get_all_basyx_submodels_from_server, post_submodel_to_server, put_submodel_to_server
+from aas2openapi.client.submodel_client import get_all_basyx_submodels_from_server, post_submodel_to_server, put_submodel_to_server, submodel_is_on_server
 from aas2openapi.convert.convert_pydantic import ClientModel, get_vars
 from aas2openapi.models import base
 from aas2openapi.util import client_utils, convert_util
@@ -40,7 +40,7 @@ async def aas_is_on_server(aas_id: str) -> bool:
 
 async def post_aas_to_server(aas: base.AAS):
     """
-    Function to post an AAS to the server
+    Function to post an AAS to the server. Also posts all submodels of the AAS to the server, if they do not exist yet.
     Args:
         aas (base.AAS): AAS to post
     Raises:
@@ -60,8 +60,8 @@ async def post_aas_to_server(aas: base.AAS):
 
     aas_attributes = get_vars(aas)
     for submodel in aas_attributes.values():
-        # TODO: decide if reference on existing submodel should be updated or a an error is raised.
-        await post_submodel_to_server(submodel)
+        if not await submodel_is_on_server(submodel.id_):
+            await post_submodel_to_server(submodel)
 
 
 async def put_aas_to_server(aas: base.AAS):
