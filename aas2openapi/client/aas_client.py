@@ -60,6 +60,7 @@ async def post_aas_to_server(aas: base.AAS):
 
     aas_attributes = get_vars(aas)
     for submodel in aas_attributes.values():
+        # TODO: decide if reference on existing submodel should be updated or a an error is raised.
         await post_submodel_to_server(submodel)
 
 

@@ -27,7 +27,7 @@ class ProcessAttributes(Submodel):
 
 class ProcessData(AAS):
     general_Info: GeneralInfo
-    time_model_id: TIME_MODEL_UNION
+    # time_model_id: TIME_MODEL_UNION
     capability: Capability
     process_attributes: ProcessAttributes
 
