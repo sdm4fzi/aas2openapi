@@ -101,7 +101,7 @@ def generate_graphql_endpoint(models: List[Type[BaseModel]]) -> APIRouter:
             new_submodel_type = create_model(__model_name=submodel.__name__, **base.Submodel.__annotations__)
             print("submodel", submodel.__fields__, "###", submodel.__annotations__)
             sme_dict = get_all_submodel_elements_from_submodel(submodel)
-            # TODO: fix this to correctly add submodel elements to submodel -> Problem with union types!
+            # FIXME: fix this to correctly add submodel elements to submodel -> Problem with union types!
             # for sme_name, sme in sme_dict.items():
             #     print("sme", sme_name, sme)
             #     add_submodel_elements_to_submodel_type(new_submodel_type, sme_name, sme)
