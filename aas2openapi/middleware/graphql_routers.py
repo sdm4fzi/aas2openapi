@@ -2,16 +2,87 @@ from aas2openapi.client.aas_client import get_aas_from_server, get_all_aas_from_
 from aas2openapi.convert.convert_pydantic import get_vars
 from aas2openapi.models import base
 from aas2openapi.util import convert_util
-from aas2openapi.util.convert_util import get_all_submodels_from_model
+from aas2openapi.util.convert_util import get_all_submodel_elements_from_submodel, get_all_submodels_from_model
 
+import typing
 
 import strawberry
+from strawberry.fastapi import GraphQLRouter
+from strawberry.experimental.pydantic.conversion_types import (
+        PydanticModel,
+        StrawberryTypeFromPydantic,
+    )
 from fastapi import APIRouter
 from pydantic import BaseModel, create_model
+from pydantic.fields import ModelField
+from pydantic import BaseConfig
 
 
 from typing import List, Type
 
+
+def generate_strawberry_type_for_model(model: Type[BaseModel]) -> StrawberryTypeFromPydantic:
+    """
+    Generates a strawberry type for the given pydantic model.
+
+    Args:
+        model (Type[BaseModel]): Pydantic model for which the strawberry type should be generated.
+
+    Returns:
+        strawberry.type: Strawberry type for the given pydantic model.
+    """
+    class_name = model.__name__ + "Type"
+    @strawberry.experimental.pydantic.type(model=model, all_fields=True, name=class_name)
+    class StrawberryModel:
+        pass
+    StrawberryModel.__name__ = class_name
+    StrawberryModel.__qualname__ = class_name
+    return StrawberryModel
+
+def update_type_with_field(new_type: Type[BaseModel], field_name: str, field_type: StrawberryTypeFromPydantic | list | str | bool | float | int):
+    print("ff", field_name, field_type)
+    class Config(BaseConfig):
+        arbitrary_types_allowed = True
+        validation = False
+
+        def prepare_field(self):
+            pass
+
+    field = ModelField(
+            name=field_name,
+            type_=field_type,
+            class_validators=None,
+            model_config=Config,
+    )
+    new_type.__fields__.update({
+        field_name: field
+    })
+
+def create_new_smc(smc: Type[base.SubmodelElementCollection]) -> Type[BaseModel]:
+    new_submodel_type = create_model(__model_name=smc.__name__, **base.SubmodelElementCollection.__annotations__)
+    return new_submodel_type
+
+
+def add_submodel_elements_to_submodel_type(submodel_type: Type[BaseModel], attribute_name, submodel_element_type: Type[BaseModel]):
+    print("submodel_element_type", submodel_element_type)
+    try:
+        if issubclass(submodel_element_type, base.SubmodelElementCollection):
+            print("smc")
+            new_smc = create_new_smc(submodel_element_type)
+            strawberry_submodel_element_class = generate_strawberry_type_for_model(new_smc)
+            update_type_with_field(submodel_type, attribute_name, strawberry_submodel_element_class)
+            return
+        elif issubclass(submodel_element_type, list):
+            print("list")
+            if issubclass(submodel_element_type[0], base.SubmodelElementCollection):
+                strawberry_submodel_element_class = generate_strawberry_type_for_model(submodel_element_type)
+                add_submodel_elements_to_submodel_type(submodel_type, attribute_name, List[strawberry_submodel_element_class])
+            else:
+                update_type_with_field(submodel_type, attribute_name, submodel_element_type)
+            return
+    except:
+        print("error", submodel_element_type)
+    update_type_with_field(submodel_type, attribute_name, submodel_element_type)
 
 def generate_graphql_endpoint(models: List[Type[BaseModel]]) -> APIRouter:
     """
@@ -21,59 +92,24 @@ def generate_graphql_endpoint(models: List[Type[BaseModel]]) -> APIRouter:
     Returns:
         APIRouter: FastAPI router with GraphQL endpoint for the given pydantic models.
     """
-    import strawberry
-    from strawberry.fastapi import GraphQLRouter
     for model in models:
         model_name = model.__name__
-
-
-        # TODO: have an empty aas class which gets extended with its submodels, but they have the annotation for strawberry type -> create type at the end
-        dict_pydantic_base_aas = base.AAS(id_="", description="", id_short="").dict()
-        submodels = get_all_submodels_from_model(models[0])
-
+        model_type = create_model(__model_name=model_name, **base.AAS.__annotations__)
+        
+        submodels = get_all_submodels_from_model(model)
         for submodel in submodels:
-            dict_pydantic_base_sm = base.Submodel(id_="", description="", id_short="", semantic_id="").dict()
-            for sme in get_vars(submodel):
-                if isinstance(sme, base.SubmodelElementCollection):
-                    @strawberry.experimental.pydantic.type(model=sme, all_fields=True)
-                    class StarberrySubModelElement:
-                        pass
-                    class_name = type(sme).__name__ + "Type"
-                    strawberry_submodel_element_class = StarberrySubModelElement
-                    strawberry_submodel_element_class.__name__ = class_name
-                    attribute_name_of_submodel = convert_util.convert_camel_case_to_underscrore_str(type(sme).__name__)
-                    dict_pydantic_base_sm.update({
-                        attribute_name_of_submodel: strawberry_submodel_element_class
-                        })
-                elif isinstance(sme, list):
-                    pass
+            new_submodel_type = create_model(__model_name=submodel.__name__, **base.Submodel.__annotations__)
+            print("submodel", submodel.__fields__, "###", submodel.__annotations__)
+            sme_dict = get_all_submodel_elements_from_submodel(submodel)
+            # TODO: fix this to correctly add submodel elements to submodel -> Problem with union types!
+            # for sme_name, sme in sme_dict.items():
+            #     print("sme", sme_name, sme)
+            #     add_submodel_elements_to_submodel_type(new_submodel_type, sme_name, sme)
+            strawberry_submodel_class = generate_strawberry_type_for_model(new_submodel_type)
+            attribute_name_of_submodel = convert_util.convert_camel_case_to_underscrore_str(new_submodel_type.__name__)
+            update_type_with_field(model_type, attribute_name_of_submodel, strawberry_submodel_class)
 
-            submodel = create_model(submodel.__name__, **dict_pydantic_base_sm, __base__=base.Submodel)
-
-            @strawberry.experimental.pydantic.type(model=submodel, all_fields=True)
-            class StarberrySubModel:
-                pass
-            class_name = submodel.__name__ + "Type"
-            strawberry_submodel_class = StarberrySubModel
-            strawberry_submodel_class.__name__ = class_name
-            strawberry_submodel_class.__qualname__ = class_name
-            attribute_name_of_submodel = convert_util.convert_camel_case_to_underscrore_str(submodel.__name__)
-            dict_pydantic_base_aas.update({
-                attribute_name_of_submodel: strawberry_submodel_class
-                })
-
-        print("dict_pydantic_base_aas", dict_pydantic_base_aas)
-        # TODO: fix that the strawberry type are also used when initiating the model
-        model_type = create_model(model_name + "Type", **dict_pydantic_base_aas, __base__=base.AAS)
-        print(model_type, model_type.__fields__)
-
-        @strawberry.experimental.pydantic.type(model=model_type, all_fields=True)
-        class StarberryModel:
-            pass
-
-        strawberry_aas_class = StarberryModel
-        strawberry_aas_class.__name__ = model_name + "Type"
-        strawberry_aas_class.__qualname__ = model_name + "Type"
+        strawberry_aas_class = generate_strawberry_type_for_model(model_type)
 
 
         @strawberry.type
@@ -81,6 +117,7 @@ def generate_graphql_endpoint(models: List[Type[BaseModel]]) -> APIRouter:
             @strawberry.field(name="get_" + model_name)
             async def get_model(self, id: str) -> strawberry_aas_class:
                 aas = await get_aas_from_server(id)
+                print(aas)
                 return strawberry_aas_class.from_pydantic(aas)
             
             @strawberry.field(name="get_all_" + model_name)

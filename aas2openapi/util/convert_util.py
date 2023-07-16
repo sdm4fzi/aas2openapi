@@ -171,19 +171,36 @@ def get_data_specification_for_attribute_name(
     )
 
 
-def get_all_submodels_from_model(model: Type[BaseModel]) -> List[model.Submodel]:
+def get_all_submodels_from_model(model: Type[BaseModel]) -> List[Type[base.Submodel]]:
     """
     Function to get all submodels from a pydantic model
     Args:
         model (Type[BaseModel]): The pydantic model to get the submodels from
     Returns:
-        List[model.Submodel]: A list of all submodels in the pydantic model
+        List[Type[model.Submodel]]: A list of all submodel types in the pydantic model
     """
     submodels = []
     for field in model.__fields__.values():
         if issubclass(field.type_, base.Submodel):
             submodels.append(field.type_)
     return submodels
+
+
+def get_all_submodel_elements_from_submodel(model: Type[base.Submodel]) -> Dict[str, Type[base.SubmodelElementCollection | list | str | bool | float | int]]:
+    """
+    Function to get all submodel elements from a pydantic submodel
+
+    Args:
+        model (Type[BaseModel]): The pydantic submodel to get the submodel elements from
+
+    Returns:
+        List[base.SubmodelElementCollection | list | str | bool | float | int]: A list of all submodel elements in the pydantic submodel
+    """
+    submodel_elements = {}
+    for field in model.__fields__.values():
+        if field.name != "description" and field.name != "id_short" and field.name != "semantic_id" and field.name != "id_":
+            submodel_elements[field.name] = field.type_
+    return submodel_elements
 
 
 def get_all_submodels_from_object_store(
