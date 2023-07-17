@@ -43,7 +43,7 @@ def update_type_with_field(new_type: Type[BaseModel], field_name: str, field_typ
     print("ff", field_name, field_type)
     class Config(BaseConfig):
         arbitrary_types_allowed = True
-        validation = False
+        # validation = False
 
         def prepare_field(self):
             pass
