@@ -15,10 +15,42 @@ from strawberry.experimental.pydantic.conversion_types import (
 from fastapi import APIRouter
 from pydantic import BaseModel, create_model
 from pydantic.fields import ModelField
-from pydantic import BaseConfig
+from pydantic import BaseConfig, validator
 
 
 from typing import List, Type
+
+class Config(BaseConfig):
+    arbitrary_types_allowed = True
+    def prepare_field(self):
+        pass
+
+def convert_union_types_to_str(model_cls: Type[BaseModel]) -> Type[BaseModel]:
+    """
+    Converts all union types in the given pydantic model to str and adds a validator to the model to convert the values to str.
+
+    Args:
+        model_cls (Type[BaseModel]): Pydantic model for which the union types should be converted to str.
+
+    Returns:
+        Type[BaseModel]: Pydantic model with all union types converted to str.
+    """
+    new_model = create_model(__model_name=model_cls.__name__, __base__=model_cls)
+    fields_requiring_post_validation = []
+    new_type_dict = {}
+    for field_name, field in new_model.__fields__.items():
+        if isinstance(field, ModelField) and (field.type_ == typing._UnionGenericAlias or (hasattr(field.type_, "__origin__") and field.type_.__origin__ is typing.Union)):
+            field.type_ = str
+            field.default = ""
+            fields_requiring_post_validation.append(field_name)
+        new_type_dict[field_name] = (field.type_, field.default if field.default else ...)
+    def convert_to_str(cls, v):
+        return str(v)
+    validators = {
+    'field_validator': validator(field_name, pre=True, always=True, allow_reuse=True)(convert_to_str) for field_name in fields_requiring_post_validation
+    }
+    newer_model = create_model(__model_name=model_cls.__name__, **new_type_dict, __config__=Config, __validators__=validators)
+    return newer_model
 
 
 def generate_strawberry_type_for_model(model: Type[BaseModel]) -> StrawberryTypeFromPydantic:
@@ -31,6 +63,8 @@ def generate_strawberry_type_for_model(model: Type[BaseModel]) -> StrawberryType
     Returns:
         strawberry.type: Strawberry type for the given pydantic model.
     """
+    # conversion of union types to str is necessary for strawberry to work!
+    model = convert_union_types_to_str(model)
     class_name = model.__name__ + "Type"
     @strawberry.experimental.pydantic.type(model=model, all_fields=True, name=class_name)
     class StrawberryModel:
@@ -39,22 +73,22 @@ def generate_strawberry_type_for_model(model: Type[BaseModel]) -> StrawberryType
     StrawberryModel.__qualname__ = class_name
     return StrawberryModel
 
-def update_type_with_field(new_type: Type[BaseModel], field_name: str, field_type: StrawberryTypeFromPydantic | list | str | bool | float | int):
-    print("ff", field_name, field_type)
-    class Config(BaseConfig):
-        arbitrary_types_allowed = True
-        # validation = False
+def update_type_with_field(type_: Type[BaseModel], field_name: str, field_type: StrawberryTypeFromPydantic | list | str | bool | float | int):
+    """
+    Updates the  type of a given field of a type.
 
-        def prepare_field(self):
-            pass
-
+    Args:
+        type_ (Type[BaseModel]): type of which the field type should be updated.
+        field_name (str): Name of the field which should be updated.
+        field_type (StrawberryTypeFromPydantic | list | str | bool | float | int): New type of the field.
+    """
     field = ModelField(
             name=field_name,
             type_=field_type,
             class_validators=None,
             model_config=Config,
     )
-    new_type.__fields__.update({
+    type_.__fields__.update({
         field_name: field
     })
 
@@ -64,16 +98,21 @@ def create_new_smc(smc: Type[base.SubmodelElementCollection]) -> Type[BaseModel]
 
 
 def add_submodel_elements_to_submodel_type(submodel_type: Type[BaseModel], attribute_name, submodel_element_type: Type[BaseModel]):
-    print("submodel_element_type", submodel_element_type)
+    """
+    Adds the given submodel element type to the given submodel type.
+
+    Args:
+        submodel_type (Type[BaseModel]): Submodel type to which the submodel element type should be added.
+        attribute_name (_type_): Name of the attribute of the submodel type to which the submodel element type should be added.
+        submodel_element_type (Type[BaseModel]): Submodel element type which should be added to the submodel type.
+    """
     try:
         if issubclass(submodel_element_type, base.SubmodelElementCollection):
-            print("smc")
             new_smc = create_new_smc(submodel_element_type)
             strawberry_submodel_element_class = generate_strawberry_type_for_model(new_smc)
             update_type_with_field(submodel_type, attribute_name, strawberry_submodel_element_class)
             return
         elif issubclass(submodel_element_type, list):
-            print("list")
             if issubclass(submodel_element_type[0], base.SubmodelElementCollection):
                 strawberry_submodel_element_class = generate_strawberry_type_for_model(submodel_element_type)
                 add_submodel_elements_to_submodel_type(submodel_type, attribute_name, List[strawberry_submodel_element_class])
@@ -99,12 +138,9 @@ def generate_graphql_endpoint(models: List[Type[BaseModel]]) -> APIRouter:
         submodels = get_all_submodels_from_model(model)
         for submodel in submodels:
             new_submodel_type = create_model(__model_name=submodel.__name__, **base.Submodel.__annotations__)
-            print("submodel", submodel.__fields__, "###", submodel.__annotations__)
             sme_dict = get_all_submodel_elements_from_submodel(submodel)
-            # FIXME: fix this to correctly add submodel elements to submodel -> Problem with union types!
-            # for sme_name, sme in sme_dict.items():
-            #     print("sme", sme_name, sme)
-            #     add_submodel_elements_to_submodel_type(new_submodel_type, sme_name, sme)
+            for sme_name, sme in sme_dict.items():
+                add_submodel_elements_to_submodel_type(new_submodel_type, sme_name, sme)
             strawberry_submodel_class = generate_strawberry_type_for_model(new_submodel_type)
             attribute_name_of_submodel = convert_util.convert_camel_case_to_underscrore_str(new_submodel_type.__name__)
             update_type_with_field(model_type, attribute_name_of_submodel, strawberry_submodel_class)
@@ -117,7 +153,6 @@ def generate_graphql_endpoint(models: List[Type[BaseModel]]) -> APIRouter:
             @strawberry.field(name="get_" + model_name)
             async def get_model(self, id: str) -> strawberry_aas_class:
                 aas = await get_aas_from_server(id)
-                print(aas)
                 return strawberry_aas_class.from_pydantic(aas)
             
             @strawberry.field(name="get_all_" + model_name)

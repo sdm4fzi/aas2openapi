@@ -20,45 +20,22 @@ from pydantic import BaseModel
 from pydantic.fields import ModelField
 from typing import Union
 
-def convert_union_to_str(model_cls):
-    # Create a new class inheriting from the original model class
+def convert_union_types_to_str(model_cls):
     new_model = create_model(__model_name=model_cls.__name__, __base__=model_cls)
-    # new_model = create_model(__model_name=model_cls.__name__, **model_cls.__fields__, __base__=model_cls)
-    print(new_model.__annotations__)
-    # Iterate over the fields of the modified class
     fields_requiring_post_validation = []
+    new_type_dict = {}
     for field_name, field in new_model.__fields__.items():
         if isinstance(field, ModelField) and (field.type_ == typing._UnionGenericAlias or (hasattr(field.type_, "__origin__") and field.type_.__origin__ is Union)):
-            # Replace the union type with str type
             field.type_ = str
             field.default = ""
             fields_requiring_post_validation.append(field_name)
-            # Add a pre-validator to convert int/float values to str
-        print(field_name, field)
-    
+        new_type_dict[field_name] = (field.type_, field.default if field.default else ...)
     def convert_to_str(cls, v):
         return str(v)
     validators = {
     'field_validator': validator(field_name, pre=True, always=True)(convert_to_str)
     }
-    newer_model = create_model(__model_name=model_cls.__name__, **new_model.__fields__, __config__=Config, __validators__=validators)
-    # for field_name, field in newer_model.__fields__.items():
-    #     print(field_name, field)
-    #     if field_name in fields_requiring_post_validation:
-    #         print("adding validator", field_name, field)
-
-    #         # newer_model.__pre_root_validators__.append(convert_to_str)
-    #          # @validator(field_name, always=True)
-    #         # def convert_to_str(cls, v):
-    #         #     print("convert_to_str", v, type(v))
-    #         #     return str(v)
-
-    #         # Assign the pre-validator to the field
-    #         if not field.pre_validators:
-    #             field.pre_validators = [convert_to_str]
-    #         else:
-    #             field.pre_validators = [convert_to_str] + field.pre_validators
-
+    newer_model = create_model(__model_name=model_cls.__name__, **new_type_dict, __config__=Config, __validators__=validators)
     return newer_model
 
 
@@ -73,7 +50,8 @@ class Submodel(BaseModel):
     id_short: str
     link: typing.Union[str, typing.List[str]] = ""
 
-new_submodel_type = convert_union_to_str(Submodel)
+new_submodel_type = convert_union_types_to_str(Submodel)
+print(new_submodel_type.__fields__) 
 
 
 strawberry_submodel = generate_strawberry_type_for_model(new_submodel_type)
@@ -91,4 +69,4 @@ a = strawberry_aas(**{"id_": "1", "description": "2", "id_short": "3", "submodel
 print(a)
 print(a.submodel)
 
-# print(strawberry_sm.to_pydantic())  
+print(strawberry_sm.to_pydantic())  
