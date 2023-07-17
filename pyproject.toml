@@ -17,6 +17,9 @@ ba-syx-aas-repository-client = {path = "ba-syx-aas-repository-client"}
 ba-syx-submodel-repository-client = {path = "ba-syx-submodel-repository-client"}
 python-dotenv = "^1.0.0"
 
+[tool.poetry.group.dev.dependencies]
+pytest = "^7.4.0"
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
