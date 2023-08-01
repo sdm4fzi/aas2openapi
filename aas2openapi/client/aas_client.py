@@ -163,6 +163,7 @@ async def get_all_aas_from_server() -> List[base.AAS]:
         List[base.AAS]: List of AAS retrieved from the server
     """
     client = AASClient(AAS_SERVER_ADRESS)
+    print(AAS_SERVER_ADRESS)
     result_string = await get_all_asset_administration_shells.asyncio(client=client)
     aas_data = result_string["result"]
     aas_list = [client_utils.transform_client_to_basyx_model(aas) for aas in aas_data]

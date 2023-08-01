@@ -3,7 +3,26 @@ services:
     image: "eclipsebasyx/aas-repository:2.0.0-SNAPSHOT"
     ports:
       - "8081:8081"
+    networks:
+      - backend
   sm-repository:
     image: "eclipsebasyx/submodel-repository:2.0.0-SNAPSHOT"
     ports:
       - "8082:8081"
+    networks:
+      - backend
+  aas2openapi-middleware:
+    build: /
+    ports:
+      - "8000:8000"
+    environment:
+      - AAS_SERVER_HOST=host.docker.internal
+      - AAS_SERVER_PORT=8081
+      - SUBMODEL_SERVER_HOST=host.docker.internal
+      - SUBMODEL_SERVER_PORT=8082
+    networks:
+      - backend
+
+networks:
+  backend:
+    driver: bridge

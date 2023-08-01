@@ -25,8 +25,7 @@ for model_definitions in models.values():
 from aas2openapi.middleware.middleware import Middleware
 
 middleware = Middleware()
-# middleware.load_pydantic_model_instances(models)
-middleware.load_pydantic_models([product.Product])
+middleware.load_pydantic_model_instances(models)
 middleware.generate_rest_api()
 middleware.generate_graphql_api()
 
@@ -37,4 +36,4 @@ app = middleware.app
 if __name__ == "__main__":
     import uvicorn
 
-    uvicorn.run(app)
+    uvicorn.run(app, host="0.0.0.0", port=8000)

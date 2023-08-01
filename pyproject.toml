@@ -7,7 +7,7 @@ license = "MIT License"
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "^3.11"
+python = "^3.10"
 pydantic = "^1.10.9"
 basyx-python-sdk= { git = "https://github.com/eclipse-basyx/basyx-python-sdk.git", branch = "improve/V30RC02" }
 uvicorn = {extras = ["standard"], version = "^0.22.0"}
@@ -16,6 +16,7 @@ openapi-python-client = "^0.14.1"
 ba-syx-aas-repository-client = {path = "ba-syx-aas-repository-client"}
 ba-syx-submodel-repository-client = {path = "ba-syx-submodel-repository-client"}
 python-dotenv = "^1.0.0"
+strawberry-graphql = {extras = ["debug-server"], version = "^0.199.0"}
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.4.0"
