@@ -37,6 +37,17 @@ async def aas_is_on_server(aas_id: str) -> bool:
     except Exception as e:
         return False
 
+def check_aas_for_duplicate_ids(aas: base.AAS):
+    ids = {aas.id_}
+    for attribute_name, attribute_value in get_vars(aas).items():
+        if not hasattr(attribute_value, "id_"):
+            continue
+        if attribute_value.id_ in ids:
+            raise HTTPException(
+                status_code=400, detail=f"Duplicate id <{attribute_value.id_}> in AAS <{aas.id_}> of type <{aas.__class__.__name__}> for attribute <{attribute_name}>."
+            )
+        ids.add(attribute_value.id_)
+
 
 async def post_aas_to_server(aas: base.AAS):
     """
@@ -50,6 +61,7 @@ async def post_aas_to_server(aas: base.AAS):
         raise HTTPException(
             status_code=400, detail=f"AAS with id {aas.id_} already exists"
         )
+    check_aas_for_duplicate_ids(aas)
     obj_store = aas2openapi.convert_pydantic_model_to_aas(aas)
     basyx_aas = obj_store.get(aas.id_)
     aas_for_client = ClientModel(basyx_object=basyx_aas)

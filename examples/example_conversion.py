@@ -8,7 +8,7 @@ from typing import List
 
 import aas2openapi
 from aas2openapi.convert.convert_pydantic import ClientModel
-from aas2openapi.models import product
+from examples.models import product
 
 
 
@@ -27,7 +27,7 @@ example_smc = product.subProduct(
 example_material = product.ProductData(
     id_="Material_example",
     description="y",
-    material_type="A",
+    product_type="A",
     processes="B",
     transport_process="C",
     id_short="b",
@@ -62,14 +62,14 @@ example_product = product.Product(
     product_data=example_material,
     id_short="e",
 )
-with open("model.json", "w", encoding="utf-8") as json_file:
+with open("examples/example_model_instance.json", "w", encoding="utf-8") as json_file:
     json.dump({"products": [example_product.dict()]}, json_file, indent=4)
 
 obj_store = aas2openapi.convert_pydantic_model_to_aas(example_product)
 
 # print(obj_store)
 
-with open("data.json", "w", encoding="utf-8") as json_file:
+with open("examples/generated_aas_and_submodels_from_models.json", "w", encoding="utf-8") as json_file:
     basyx.aas.adapter.json.write_aas_json_file(json_file, obj_store)
 
 

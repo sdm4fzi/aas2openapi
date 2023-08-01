@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from typing import Optional, List, Union
-from pydantic.dataclasses import dataclass
 
 from aas2openapi.models.base import AAS, Submodel, SubmodelElementCollection
 
@@ -32,6 +31,6 @@ class ProcessReference(Submodel):
 class Product(AAS):
     bom: BOM
     process_reference: ProcessReference
-    product_data: ProductData
+    product_data: Optional[ProductData]
 
 

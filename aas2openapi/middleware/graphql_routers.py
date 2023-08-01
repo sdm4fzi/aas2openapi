@@ -120,7 +120,7 @@ def add_submodel_elements_to_submodel_type(submodel_type: Type[BaseModel], attri
                 update_type_with_field(submodel_type, attribute_name, submodel_element_type)
             return
     except:
-        print("error", submodel_element_type)
+        print("Resolving Union type <", submodel_element_type, "> in <", submodel_type.__name__,"> for attribute <", attribute_name,"> to be considered as > str > type in GraphQL router.")
     update_type_with_field(submodel_type, attribute_name, submodel_element_type)
 
 def generate_graphql_endpoint(models: List[Type[BaseModel]]) -> APIRouter:

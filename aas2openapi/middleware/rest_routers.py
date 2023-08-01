@@ -1,5 +1,6 @@
 from fastapi import HTTPException, APIRouter
 from pydantic import BaseModel, create_model
+from pydantic.fields import ModelField
 
 from typing import List, Type, Dict
 
@@ -17,8 +18,34 @@ from aas2openapi.client.submodel_client import (
     delete_submodel_from_server,
 )
 from aas2openapi.models import base
-from aas2openapi.util.convert_util import get_all_submodels_from_model
+from aas2openapi.util.convert_util import get_all_submodels_from_model, convert_camel_case_to_underscrore_str
 
+
+def is_optional_field(field: ModelField):
+    return field.required is False
+
+def check_if_submodel_is_optional_in_aas(aas: Type[base.AAS], submodel: Type[base.Submodel]) -> bool:
+    """
+    Checks if a submodel is an optional attribute in an aas.
+
+    Args:
+        aas (Type[base.AAS]): AAS model.
+        submodel (Type[base.Submodel]): Submodel to be checked.
+
+    Raises:
+        ValueError: If the submodel is not a submodel of the aas.
+
+    Returns:
+        bool: True if the submodel is an optional attribute in the aas, False otherwise.
+    """
+    for field_name, field in aas.__fields__.items():
+        print(field_name)
+        if field_name ==  convert_camel_case_to_underscrore_str(submodel.__name__):
+            if is_optional_field(field):
+                return True
+            else:
+                return False
+    raise ValueError(f"Submodel {submodel.__name__} is not a submodel of {aas.__name__}.")
 
 def generate_submodel_endpoints_from_model(
     pydantic_model: Type[BaseModel], submodel: Type[base.Submodel]
@@ -35,6 +62,7 @@ def generate_submodel_endpoints_from_model(
     """
     model_name = pydantic_model.__name__
     submodel_name = submodel.__name__
+    optional_submodel = check_if_submodel_is_optional_in_aas(pydantic_model, submodel)
     router = APIRouter(
         prefix=f"/{model_name}/{{item_id}}/{submodel_name}",
         tags=[model_name],
@@ -48,20 +76,20 @@ def generate_submodel_endpoints_from_model(
     async def get_item(item_id: str):
         return await get_submodel_from_aas_id_and_class_name(item_id, submodel_name)
 
-    # TODO: only add post and delete method if the submodel is an optional field.
-    @router.post(
-        "/",
-        response_model=submodel,
-    )
-    async def post_item(item_id: str, item: submodel) -> Dict[str, str]:
-        try:
-            await get_submodel_from_aas_id_and_class_name(item_id, submodel_name)
-        except HTTPException as e:
-            if e.status_code == 400:
-                await post_submodel_to_server(item)
-                return item
-            else:
-                raise e
+    if optional_submodel:
+        @router.post(
+            "/",
+            response_model=submodel,
+        )
+        async def post_item(item_id: str, item: submodel) -> Dict[str, str]:
+            try:
+                await get_submodel_from_aas_id_and_class_name(item_id, submodel_name)
+            except HTTPException as e:
+                if e.status_code == 400:
+                    await post_submodel_to_server(item)
+                    return item
+                else:
+                    raise e
     
     @router.put("/")
     async def put_item(item_id: str, item: submodel) -> Dict[str, str]:
@@ -69,12 +97,12 @@ def generate_submodel_endpoints_from_model(
         await put_submodel_to_server(item)
         return {"message": f"Succesfully updated submodel with id {item_id}"}
 
-    @router.delete("/")
-    async def delete_item(item_id: str):
-        submodel = await get_submodel_from_aas_id_and_class_name(item_id, submodel_name)
-        await delete_submodel_from_server(submodel.id_)
-        return {"message": f"Succesfully deleted submodel with id {item_id}"}
-
+    if optional_submodel:
+        @router.delete("/")
+        async def delete_item(item_id: str):
+            submodel = await get_submodel_from_aas_id_and_class_name(item_id, submodel_name)
+            await delete_submodel_from_server(submodel.id_)
+            return {"message": f"Succesfully deleted submodel with id {item_id}"}
 
     return router
 
