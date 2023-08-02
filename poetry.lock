@@ -114,7 +114,7 @@ urllib3 = ">=1.26,<2.0"
 [package.source]
 type = "git"
 url = "https://github.com/eclipse-basyx/basyx-python-sdk.git"
-reference = "improve/V30RC02"
+reference = "ab298a769b446d162b35fa4a8039713cc71371b1"
 resolved_reference = "ab298a769b446d162b35fa4a8039713cc71371b1"
 
 [[package]]
@@ -1049,14 +1049,14 @@ full = ["httpx (>=0.22.0)", "itsdangerous", "jinja2", "python-multipart", "pyyam
 
 [[package]]
 name = "strawberry-graphql"
-version = "0.199.0"
+version = "0.199.1"
 description = "A library for creating GraphQL APIs"
 category = "main"
 optional = false
 python-versions = ">=3.8,<4.0"
 files = [
-    {file = "strawberry_graphql-0.199.0-py3-none-any.whl", hash = "sha256:eb3cb0c4b0eda573ce38731cdc60527a76e0a33e6db17fcabc72b9870f36e4ad"},
-    {file = "strawberry_graphql-0.199.0.tar.gz", hash = "sha256:30b8bb28adf57a64af9f6915a6d58400898e32aa60e7578bfdb642d6d562199d"},
+    {file = "strawberry_graphql-0.199.1-py3-none-any.whl", hash = "sha256:84efcf749f4a46ae975ac7f1cb0afcc1b6b5290b4ce80baacbd98eb3407a0704"},
+    {file = "strawberry_graphql-0.199.1.tar.gz", hash = "sha256:2ad3d85cc9939b6bae807267d9f55cb24936de7855faf421f4a26dd6ed388e68"},
 ]
 
 [package.dependencies]
@@ -1356,4 +1356,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "9dc0eae9c7ae6873e2aff7839b917782a347f364a6e4b3479f6303a9929467e1"
+content-hash = "cb57bbe0c571612fd98d48e5a5e9f1839e763bae78e43c4751e398b5fb732614"
