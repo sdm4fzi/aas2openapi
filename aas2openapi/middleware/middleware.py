@@ -80,6 +80,8 @@ class Middleware:
         """
         instances = aas2openapi.convert_object_store_to_pydantic_models(models)
         self.models = get_pydantic_model_from_imstances(instances)
+        print("models", self.models)
+        print(self.models[0].__fields__)
             
     def generate_rest_api(self):
         """

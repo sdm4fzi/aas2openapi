@@ -1,92 +1,129 @@
-# aas2openapi
+# aas2openapi - Middleware for Asset Administration Shell and openAPI 3.0
 
+![Build-sucess](https://img.shields.io/badge/build-success-green)
+![PyPI](https://img.shields.io/pypi/v/aas2openapi)
+![PyPI - Python Version](https://img.shields.io/pypi/pyversions/aas2openapi)
 
+!Also include zideno badge for release
+
+aas2openapi is a middleware for Asset Administration Shell (AAS) and openAPI 3.0. It can be used to transform AAS to openAPI 3.0 objects and vice versa. Moreover, it can be used to generate a CRUD server that allows to access the AAS data via RESTful API with openAPI Specifications.
+
+## Installation
+
+To install the package, run the following command in the terminal:
+
+```bash
+pip install aas2openapi
+```
+
+Please note that the package is only compatible with Python 3.10 or higher.
 
 ## Getting started
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
+In the following, we will consider a minimal example to demonstrate the usage of the package. The example is also available in the [examples](examples/) and consists of defining a simple model of an AAS with two submodels, transforming this model and integrating it with the aas2openapi middleware.
 
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
+### Defining a simple AAS
 
-## Add your files
+At first, we create a simple data model with the basic building blocks (AAS and Submodel) of aas2openapi:
 
-- [ ] [Create](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#create-a-file) or [upload](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#upload-a-file) files
-- [ ] [Add files using the command line](https://docs.gitlab.com/ee/gitlab-basics/add-file.html#add-a-file-using-the-command-line) or push an existing Git repository with the following command:
+```python
+from aas2openapi import models
 
+class BillOfMaterial(models.Submodel):
+    components: typing.List[str]
+
+class ProcessModel(models.Submodel):
+    processes: typing.List[str]
+
+class Product(models.AAS):
+    process_model: ProcessModel
+    bill_of_material: BillOfMaterial
 ```
-cd existing_repo
-git remote add origin https://git.scc.kit.edu/zh9173/aas2openapi.git
-git branch -M main
-git push -uf origin main
+
+The data model consists of a product that has a process model and a bill of material. The process model and the bill of material are submodels that contain a list of processes and components, respectively. To be able to instantiate an AAS, we also create an instance of this data model:
+
+```python
+example_product = Product(
+    id_="bc2119e48d0",
+    process_model=ProcessModel(
+        id_="a8cd10ed",
+        processes=["join", "screw"],
+    ),
+    bill_of_material=BillOfMaterial(
+        id_="a7cba3bcd", components=["stator", "rotor", "coil", "bearing"]
+    ),
+)
 ```
 
-## Integrate with your tools
+### Transforming the AAS to openAPI
 
-- [ ] [Set up project integrations](https://git.scc.kit.edu/zh9173/aas2openapi/-/settings/integrations)
+Now, we can use the `aas2openapi` package to transform the object to an AAS and serialize it with basyx to JSON:
 
-## Collaborate with your team
+```python
+import aas2openapi
+obj_store = aas2openapi.convert_pydantic_model_to_aas(example_product)
+import basyx.aas.adapter.json.json_serialization
 
-- [ ] [Invite team members and collaborators](https://docs.gitlab.com/ee/user/project/members/)
-- [ ] [Create a new merge request](https://docs.gitlab.com/ee/user/project/merge_requests/creating_merge_requests.html)
-- [ ] [Automatically close issues from merge requests](https://docs.gitlab.com/ee/user/project/issues/managing_issues.html#closing-issues-automatically)
-- [ ] [Enable merge request approvals](https://docs.gitlab.com/ee/user/project/merge_requests/approvals/)
-- [ ] [Automatically merge when pipeline succeeds](https://docs.gitlab.com/ee/user/project/merge_requests/merge_when_pipeline_succeeds.html)
+with open("examples/simple_aas_and_submodels.json", "w", encoding="utf-8") as json_file:
+    basyx.aas.adapter.json.write_aas_json_file(json_file, obj_store)
+```
 
-## Test and Deploy
+Of course, we can also transform AAS to python objects, which can be easily transformed to openAPI objects with the middleware:
 
-Use the built-in continuous integration in GitLab.
+```python
+data_model = aas2openapi.convert_object_store_to_pydantic_models(obj_store)
+print(data_model)
+```
 
-- [ ] [Get started with GitLab CI/CD](https://docs.gitlab.com/ee/ci/quick_start/index.html)
-- [ ] [Analyze your code for known vulnerabilities with Static Application Security Testing(SAST)](https://docs.gitlab.com/ee/user/application_security/sast/)
-- [ ] [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/ee/topics/autodevops/requirements.html)
-- [ ] [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/ee/user/clusters/agent/)
-- [ ] [Set up protected environments](https://docs.gitlab.com/ee/ci/environments/protected_environments.html)
+### Using the aasopenapi middleware
 
-***
+The aas2openapi middleware is build with fastAPI and generates therefore automatically a openAPI Specification for provided models. To use the middleware, we can simply input our predefined data models and connect it with running basyx servers. Here, we use instances of the data models that we have defined before and create a CRUD RESTful API and a GraphQL API for them:
 
-# Editing this README
+```python
+from aas2openapi.middleware import Middleware
+middleware = Middleware()
+middleware.load_pydantic_model_instances([example_product])
+middleware.generate_rest_api()
+middleware.generate_graphql_api()
 
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thank you to [makeareadme.com](https://www.makeareadme.com/) for this template.
+app = middleware.app
 
-## Suggestions for a good README
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
+import uvicorn
 
-## Name
-Choose a self-explaining name for your project.
+uvicorn.run(app)
+```
 
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
+Besides loading the data models from instances,  we can also generate it from types or AAS. To do so, simply replace the `load_pydantic_model_instances` method with `load_pydantic_model_types` or `load_aas`:
 
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
+```python
+middleware.load_pydantic_model_types([Product])
+middleware.load_aas_from_objectstore(obj_store)
+```
 
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
+However, no examples can be provided when loading from types and the graphQL API is not available when loading from AAS.
 
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
+We can either run the middleware now directly with python or make a docker build. In both scenarios, an AAS and Submodel-server need to be running that the middleware can connect to. Each request to the middleware is then translated and forwarded to the AAS and Submodel-server.
 
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
+The repository already comes with a docker-compose file that can be used to start the AAS and Submodel-server. To start the docker-compose file, run the following command in the terminal:
 
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
+```bash
+docker-compose -f docker-compose.yaml up
+```
 
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
+We can now run the middleware script with python and access it at `http://localhost:8000/`. Documentation of the generated Rest API is at `http://localhost:8000/docs` and the openAPI Specification is available at `http://localhost:8000/openapi.json`. The GraphQL API is at `http://localhost:8000/graphql` and comes also with a graphical viewer.
+
+Lastly, we can build a docker image of the middleware and run it in a docker-compose as a container. To do so, just adjust the provided Dockerfile and docker-compose.yaml of this package to fit your needs based on the provided example in the file docker_app.py.
 
 ## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
 
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
-
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
-
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
+`aas2openapi` is a new project and has therefore much room for improvement. Therefore, it would be a pleasure to get feedback or support! If you want to contribute to the package, either create issues on [aas2openapis github page](https://github.com/sdm4fzi/aas2openapi) for discussing new features or contact me directly via [github](https://github.com/SebBehrendt) or [email](mailto:sebastian.behrendt@kit.edu).
 
 ## License
-For open source projects, say how it is licensed.
 
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+The package is licensed under the [MIT license](LICENSE).
+
+## Acknowledgements
+
+We extend our sincere thanks to the German Federal Ministry for Economic Affairs and Climate Action
+(BMWK) for supporting this research project 13IK001ZF “Software-Defined Manufacturing for the
+automotive and supplying industry [https://www.sdm4fzi.de/](https://www.sdm4fzi.de/).

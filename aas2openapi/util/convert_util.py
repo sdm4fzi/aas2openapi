@@ -123,6 +123,8 @@ def get_basyx_description_from_pydantic_model(pydantic_model: base.AAS | base.Su
     Raises:
         ValueError: If the description of the pydantic model is not a dict or a string
     """
+    if not pydantic_model.description:
+        return None
     try:
         dict_description = json.loads(pydantic_model.description)
         if not isinstance(dict_description, dict):

@@ -2,10 +2,11 @@ from __future__ import annotations
 
 import json
 from urllib import parse
+from uuid import uuid1
 
 from basyx.aas import model
 
-from typing import Union
+from typing import Union, Optional, Any
 from pydantic import BaseModel, Field
 from aas2openapi.util import convert_util
 
@@ -48,7 +49,7 @@ def convert_pydantic_model_to_aas(
 
     basyx_aas = model.AssetAdministrationShell(
         asset_information=asset_information,
-        id_short=pydantic_aas.id_short,
+        id_short=get_id_short(pydantic_aas),
         id_=model.Identifier(pydantic_aas.id_),
         description=convert_util.get_basyx_description_from_pydantic_model(pydantic_aas),
         submodel={
@@ -65,7 +66,7 @@ def convert_pydantic_model_to_aas(
     return obj_store
 
 
-def get_id_short(element: Union[base.Submodel, base.SubmodelElementCollection]) -> str:
+def get_id_short(element: Union[base.AAS, base.Submodel, base.SubmodelElementCollection]) -> str:
     if element.id_short:
         return element.id_short
     else:
@@ -108,9 +109,21 @@ def create_submodel_element(
     attribute_value: Union[
         base.SubmodelElementCollection, str, float, int, bool, tuple, list, set
     ],
+    extend_attribute_name_for_id: bool = False,
 ) -> model.SubmodelElement:
+    """
+    Create a basyx SubmodelElement from a pydantic SubmodelElementCollection or a primitive type
+
+    Args:
+        attribute_name (str): Name of the attribute that is used for ID and id_short
+        attribute_value (Union[ base.SubmodelElementCollection, str, float, int, bool, tuple, list, set ]): Value of the attribute
+
+
+    Returns:
+        model.SubmodelElement: basyx SubmodelElement
+    """
     if isinstance(attribute_value, base.SubmodelElementCollection):
-        smc = create_submodel_element_collection(attribute_value, attribute_name)
+        smc = create_submodel_element_collection(attribute_value, attribute_name, extend_attribute_name_for_id)
         return smc
     elif isinstance(attribute_value, list) or isinstance(attribute_value, tuple):
         sml = create_submodel_element_list(attribute_name, attribute_value)
@@ -133,7 +146,7 @@ def create_submodel_element(
         )
         reference = model.ModelReference(key=(key,), type_="")
         reference_element = model.ReferenceElement(
-            id_short=attribute_name,
+            id_short=get_attribute_id(attribute_name, attribute_value, extend_attribute_name_for_id),
             value=reference,
             embedded_data_specifications=[
                 convert_util.get_data_specification_for_attribute_name(attribute_name)
@@ -141,7 +154,7 @@ def create_submodel_element(
         )
         return reference_element
     else:
-        property = create_property(attribute_name, attribute_value)
+        property = create_property(attribute_name, attribute_value, extend_attribute_name_for_id)
 
         return property
 
@@ -158,12 +171,19 @@ def get_value_type_of_attribute(
     else:
         return model.datatypes.String
 
+def get_attribute_id(attribute_name: str, attribute_value: Any, extend_attribute_name_for_id: bool = False) -> str:
+    if extend_attribute_name_for_id:
+        id_short = attribute_name + "_" + str(id(attribute_value))
+    else:
+        id_short = attribute_name
+    return id_short
 
 def create_property(
-    attribute_name: str, attribute_value: Union[str, int, float, bool]
+    attribute_name: str, attribute_value: Union[str, int, float, bool],
+    extend_attribute_name_for_id: bool = False
 ) -> model.Property:
     property = model.Property(
-        id_short=attribute_name,
+        id_short=get_attribute_id(attribute_name, attribute_value, extend_attribute_name_for_id),
         value_type=get_value_type_of_attribute(attribute_value),
         value=attribute_value,
         embedded_data_specifications=[
@@ -174,7 +194,8 @@ def create_property(
 
 
 def create_submodel_element_collection(
-    pydantic_submodel_element_collection: base.SubmodelElementCollection, name: str
+    pydantic_submodel_element_collection: base.SubmodelElementCollection, name: str, 
+    extend_attribute_name_for_id: bool = False
 ) -> model.SubmodelElementCollection:
     value = []
     smc_attributes = get_vars(pydantic_submodel_element_collection)
@@ -183,8 +204,12 @@ def create_submodel_element_collection(
         sme = create_submodel_element(attribute_name, attribute_value)
         value.append(sme)
 
+    id_short = get_id_short(pydantic_submodel_element_collection)
+    if extend_attribute_name_for_id:
+        id_short = get_attribute_id(id_short, value, extend_attribute_name_for_id)
+
     smc = model.SubmodelElementCollection(
-        id_short=pydantic_submodel_element_collection.id_short,
+        id_short=id_short,
         value=value,
         description=convert_util.get_basyx_description_from_pydantic_model(pydantic_submodel_element_collection),
         embedded_data_specifications=[
@@ -200,16 +225,13 @@ def create_submodel_element_list(
 ) -> model.SubmodelElementList:
     submodel_elements = []
     for el in value:
-        submodel_element = create_submodel_element(name, el)
+        submodel_element = create_submodel_element(name, el, True)
         submodel_elements.append(submodel_element)
 
-    print(type(submodel_elements[0]), name)
-    # if isinstance(submodel_elements[0], ):
     if isinstance(submodel_elements[0], model.Property):
         value_type_list_element =type(value[0])
     else:
         value_type_list_element = None
-
 
     sml = model.SubmodelElementList(
         id_short=name,

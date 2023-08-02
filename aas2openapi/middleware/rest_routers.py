@@ -39,7 +39,7 @@ def check_if_submodel_is_optional_in_aas(aas: Type[base.AAS], submodel: Type[bas
         bool: True if the submodel is an optional attribute in the aas, False otherwise.
     """
     for field_name, field in aas.__fields__.items():
-        if field_name ==  convert_camel_case_to_underscrore_str(submodel.__name__):
+        if field.type_.__name__ ==  submodel.__name__:
             if is_optional_field(field):
                 return True
             else:
