@@ -1,7 +1,7 @@
 # aas2openapi - Middleware for Asset Administration Shell and openAPI 3.0
 
 ![Build-sucess](https://img.shields.io/badge/build-success-green)
-![Version](https://img.shields.io/badge/version-0.1.0-green)
+![Version](https://img.shields.io/badge/version-0.1.1-green)
 ![PyPI - Python Version](https://img.shields.io/badge/python-3.10|3.11|3.12-blue)
 
 aas2openapi is a middleware for Asset Administration Shell (AAS) and openAPI 3.0. It can be used to transform AAS to openAPI 3.0 objects and vice versa. Moreover, it can be used to generate a CRUD server that allows to access the AAS data via RESTful API with openAPI Specifications.
@@ -18,7 +18,7 @@ poetry install
 Alternatively, you can install the package with pip by considering the wheel file in the [dist](dist/) folder:
 
 ```bash
-pip install dist/aas2openapi-0.1.0-py3-none-any.whl
+pip install dist/aas2openapi-0.1.1-py3-none-any.whl
 ```
 
 Please note that the package is only compatible with Python 3.10 or higher.
