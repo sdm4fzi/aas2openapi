@@ -1,8 +1,8 @@
 # aas2openapi - Middleware for Asset Administration Shell and openAPI 3.0
 
 ![Build-sucess](https://img.shields.io/badge/build-success-green)
-![PyPI](https://img.shields.io/pypi/v/aas2openapi)
-![PyPI - Python Version](https://img.shields.io/pypi/pyversions/aas2openapi)
+![Version](https://img.shields.io/badge/version-0.1.0-green)
+![PyPI - Python Version](https://img.shields.io/badge/python-3.10|3.11|3.12-blue)
 
 !Also include zideno badge for release
 
@@ -10,10 +10,17 @@ aas2openapi is a middleware for Asset Administration Shell (AAS) and openAPI 3.0
 
 ## Installation
 
-To install the package, run the following command in the terminal:
+You can install the package using [poetry](https://python-poetry.org/) by running the following commands in the terminal:
 
 ```bash
-pip install aas2openapi
+poetry shell
+poetry install
+```
+
+Alternatively, you can install the package with pip by considering the wheel file in the [dist](dist/) folder:
+
+```bash
+pip install dist/aas2openapi-0.1.0-py3-none-any.whl
 ```
 
 Please note that the package is only compatible with Python 3.10 or higher.
@@ -36,8 +43,8 @@ class ProcessModel(models.Submodel):
     processes: typing.List[str]
 
 class Product(models.AAS):
-    process_model: ProcessModel
     bill_of_material: BillOfMaterial
+    process_model: typing.Optional[ProcessModel]
 ```
 
 The data model consists of a product that has a process model and a bill of material. The process model and the bill of material are submodels that contain a list of processes and components, respectively. To be able to instantiate an AAS, we also create an instance of this data model:
