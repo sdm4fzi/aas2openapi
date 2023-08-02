@@ -170,6 +170,23 @@ def generate_endpoints_from_model(pydantic_model: Type[BaseModel]) -> List[APIRo
     return routers
 
 
+def set_required_fields(model: Type[BaseModel], origin_model: Type[BaseModel]) -> Type[BaseModel]:
+    """
+    Sets the required fields of a pydantic model.
+
+    Args:
+        model (Type[BaseModel]): Pydantic model.
+        origin_model (Type[BaseModel]): Pydantic model from which the required fields should be copied.
+
+    Returns:
+        Type[BaseModel]: Pydantic model with the required fields set.
+    """
+    for field_name, field in origin_model.__fields__.items():
+        if field.required:
+            model.__fields__[field_name].required = True
+    return model
+
+
 def get_pydantic_model_from_imstances(
     instances: List[BaseModel],
 ) -> List[Type[BaseModel]]:
@@ -186,5 +203,8 @@ def get_pydantic_model_from_imstances(
     for instance in instances:
         model_name = type(instance).__name__
         pydantic_model = create_model(model_name, **vars(instance))
+        pydantic_model = set_required_fields(pydantic_model, instance.__class__)
+        print(instance.__fields__)
+        print(pydantic_model.__fields__)
         models.append(pydantic_model)
     return models

@@ -15,8 +15,8 @@ class ProcessModel(models.Submodel):
 
 
 class Product(models.AAS):
-    process_model: ProcessModel
     bill_of_material: BillOfMaterial
+    process_model: typing.Optional[ProcessModel]
 
 
 # Test the transformation capabilities of aas2openapi
