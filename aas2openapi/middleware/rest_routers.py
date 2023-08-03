@@ -204,7 +204,5 @@ def get_pydantic_model_from_imstances(
         model_name = type(instance).__name__
         pydantic_model = create_model(model_name, **vars(instance))
         pydantic_model = set_required_fields(pydantic_model, instance.__class__)
-        print(instance.__fields__)
-        print(pydantic_model.__fields__)
         models.append(pydantic_model)
     return models
