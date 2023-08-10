@@ -3,6 +3,10 @@ import aas2openapi
 from aas2openapi.middleware import Middleware
 from aas2openapi import models
 
+from dotenv import load_dotenv
+
+load_dotenv()
+
 # Create some examplary models that should be used in the middleware
 
 

@@ -1,7 +1,7 @@
 # aas2openapi - Middleware for Asset Administration Shell and openAPI 3.0
 
 ![Build-sucess](https://img.shields.io/badge/build-success-green)
-![Version](https://img.shields.io/badge/version-0.1.2-green)
+![Version](https://img.shields.io/badge/version-0.1.3-green)
 ![PyPI - Python Version](https://img.shields.io/badge/python-3.10|3.11|3.12-blue)
 [![DOI](https://zenodo.org/badge/672818560.svg)](https://zenodo.org/badge/latestdoi/672818560)
 
@@ -33,7 +33,11 @@ In the following, we will consider a minimal example to demonstrate the usage of
 At first, we create a simple data model with the basic building blocks (AAS and Submodel) of aas2openapi:
 
 ```python
+import typing
+from dotenv import load_dotenv
 from aas2openapi import models
+
+load_dotenv()
 
 class BillOfMaterial(models.Submodel):
     components: typing.List[str]
