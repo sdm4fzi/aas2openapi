@@ -83,14 +83,13 @@ print(data_model)
 
 ### Using the aasopenapi middleware
 
-The aas2openapi middleware is build with fastAPI and generates therefore automatically a openAPI Specification for provided models. To use the middleware, we can simply input our predefined data models and connect it with running basyx servers. Here, we use instances of the data models that we have defined before and create a CRUD RESTful API and a GraphQL API for them:
+The aas2openapi middleware is build with fastAPI and generates therefore automatically a openAPI Specification for provided models. To use the middleware, we can simply input our predefined data models and connect it with running basyx servers. Here, we use instances of the data models that we have defined before and create a CRUD RESTful API for them:
 
 ```python
 from aas2openapi.middleware import Middleware
 middleware = Middleware()
 middleware.load_pydantic_model_instances([example_product])
 middleware.generate_rest_api()
-middleware.generate_graphql_api()
 
 app = middleware.app
 
@@ -106,7 +105,7 @@ middleware.load_pydantic_model_types([Product])
 middleware.load_aas_from_objectstore(obj_store)
 ```
 
-However, no examples can be provided when loading from types and the graphQL API is not available when loading from AAS.
+However, no examples can be provided when loading from types.
 
 We can either run the middleware now directly with python or make a docker build. In both scenarios, an AAS and Submodel-server need to be running that the middleware can connect to. Each request to the middleware is then translated and forwarded to the AAS and Submodel-server.
 
@@ -116,7 +115,7 @@ The repository already comes with a docker-compose file that can be used to star
 docker-compose -f basyx-compose.yaml up
 ```
 
-We can now run the middleware script with python and access it at `http://localhost:8000/`. Documentation of the generated Rest API is at `http://localhost:8000/docs` and the openAPI Specification is available at `http://localhost:8000/openapi.json`. The GraphQL API is at `http://localhost:8000/graphql` and comes also with a graphical viewer.
+We can now run the middleware script with python and access it at `http://localhost:8000/`. Documentation of the generated Rest API is at `http://localhost:8000/docs` and the openAPI Specification is available at `http://localhost:8000/openapi.json`.
 
 Lastly, we can build a docker image of the middleware and run it in a docker-compose as a container. To do so, just adjust the provided Dockerfile and docker-compose.yaml of this package to fit your needs based on the provided example in the file docker_app.py.
 
