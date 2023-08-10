@@ -1,4 +1,4 @@
-from fastapi import HTTPException, APIRouter
+from fastapi import HTTPException, APIRouter, Request
 from pydantic import BaseModel, create_model
 from pydantic.fields import ModelField
 
@@ -19,6 +19,23 @@ from aas2openapi.client.submodel_client import (
 )
 from aas2openapi.models import base
 from aas2openapi.util.convert_util import get_all_submodels_from_model, convert_camel_case_to_underscrore_str
+from aas2openapi.util.client_utils import is_server_online
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
+
+async def check_aas_and_sm_server_online():
+    aas_server_host = os.getenv("AAS_SERVER_HOST")
+    aas_server_port = int(os.getenv("AAS_SERVER_PORT"))
+    submodel_server_host = os.getenv("SUBMODEL_SERVER_HOST")
+    submodel_server_port = int(os.getenv("SUBMODEL_SERVER_PORT"))
+    if not is_server_online(aas_server_host, aas_server_port):
+        raise HTTPException(status_code=503, detail=f"Eror 503: AAS Server cannot be reached at adress {aas_server_host}:{aas_server_port}")
+    if not is_server_online(os.getenv("SUBMODEL_SERVER_HOST"), int(os.getenv("SUBMODEL_SERVER_PORT"))):
+        raise HTTPException(status_code=503, detail=f"Eror 503: Submodel Server cannot be reached at adress {submodel_server_host}:{submodel_server_port}")
+
+
 
 
 def is_optional_field(field: ModelField):
@@ -73,6 +90,7 @@ def generate_submodel_endpoints_from_model(
         response_model=submodel,
     )
     async def get_item(item_id: str):
+        await check_aas_and_sm_server_online()
         return await get_submodel_from_aas_id_and_class_name(item_id, submodel_name)
 
     if optional_submodel:
@@ -81,6 +99,7 @@ def generate_submodel_endpoints_from_model(
             response_model=submodel,
         )
         async def post_item(item_id: str, item: submodel) -> Dict[str, str]:
+            await check_aas_and_sm_server_online()
             try:
                 await get_submodel_from_aas_id_and_class_name(item_id, submodel_name)
             except HTTPException as e:
@@ -92,6 +111,7 @@ def generate_submodel_endpoints_from_model(
     
     @router.put("/")
     async def put_item(item_id: str, item: submodel) -> Dict[str, str]:
+        await check_aas_and_sm_server_online()
         submodel = await get_submodel_from_aas_id_and_class_name(item_id, submodel_name)
         await put_submodel_to_server(item)
         return {"message": f"Succesfully updated submodel with id {item_id}"}
@@ -99,6 +119,7 @@ def generate_submodel_endpoints_from_model(
     if optional_submodel:
         @router.delete("/")
         async def delete_item(item_id: str):
+            await check_aas_and_sm_server_online()
             submodel = await get_submodel_from_aas_id_and_class_name(item_id, submodel_name)
             await delete_submodel_from_server(submodel.id_)
             return {"message": f"Succesfully deleted submodel with id {item_id}"}
@@ -124,26 +145,31 @@ def generate_aas_endpoints_from_model(pydantic_model: Type[BaseModel]) -> APIRou
 
     @router.get("/", response_model=List[pydantic_model])
     async def get_items():
-        data_retrieved = await get_all_aas_from_server()
+        await check_aas_and_sm_server_online()
+        data_retrieved = await get_all_aas_from_server(pydantic_model)
         return data_retrieved
 
     @router.post(f"/", response_model=pydantic_model)
     async def post_item(item: pydantic_model) -> Dict[str, str]:
+        await check_aas_and_sm_server_online()
         await post_aas_to_server(item)
         return item
 
     @router.get("/{item_id}", response_model=pydantic_model)
     async def get_item(item_id: str):
+        await check_aas_and_sm_server_online()
         data_retrieved = await get_aas_from_server(item_id)
         return data_retrieved
 
     @router.put("/{item_id}")
     async def put_item(item_id: str, item: pydantic_model) -> Dict[str, str]:
+        await check_aas_and_sm_server_online()
         await put_aas_to_server(item)
         return {"message": "Item updated"}
 
     @router.delete("/{item_id}")
     async def delete_item(item_id: str):
+        await check_aas_and_sm_server_online()
         await delete_aas_from_server(item_id)
         return {"message": "Item deleted"}
 

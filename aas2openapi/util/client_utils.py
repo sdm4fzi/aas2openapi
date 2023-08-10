@@ -6,6 +6,7 @@ import basyx.aas.adapter.json
 from basyx.aas import model
 import json
 from typing import Union
+import socket
 
 
 def get_base64_from_string(string: str) -> str:
@@ -28,3 +29,13 @@ def transform_client_to_basyx_model(client_model: dict) -> Union[model.AssetAdmi
     json_model = json.dumps(client_model, indent=4)
     basyx_model = json.loads(json_model, cls=basyx.aas.adapter.json.AASFromJsonDecoder)
     return basyx_model
+
+def is_server_online(host, port):
+    try:
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.settimeout(2)  # 2 seconds
+        sock.connect((host, port))
+        sock.close()
+        return True
+    except (socket.timeout, ConnectionRefusedError):
+        return False

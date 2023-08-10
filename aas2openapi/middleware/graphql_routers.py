@@ -43,7 +43,7 @@ def convert_union_types_to_str(model_cls: Type[BaseModel]) -> Type[BaseModel]:
             field.type_ = str
             field.default = ""
             fields_requiring_post_validation.append(field_name)
-        new_type_dict[field_name] = (field.type_, field.default if field.default else ...)
+        new_type_dict[field_name] = (field.outer_type_, field.default if field.default else ...)
     def convert_to_str(cls, v):
         return str(v)
     validators = {
@@ -82,6 +82,7 @@ def update_type_with_field(type_: Type[BaseModel], field_name: str, field_type: 
         field_name (str): Name of the field which should be updated.
         field_type (StrawberryTypeFromPydantic | list | str | bool | float | int): New type of the field.
     """
+    # TODO: fix problems with typing.List!
     field = ModelField(
             name=field_name,
             type_=field_type,
@@ -106,21 +107,22 @@ def add_submodel_elements_to_submodel_type(submodel_type: Type[BaseModel], attri
         attribute_name (_type_): Name of the attribute of the submodel type to which the submodel element type should be added.
         submodel_element_type (Type[BaseModel]): Submodel element type which should be added to the submodel type.
     """
-    try:
-        if issubclass(submodel_element_type, base.SubmodelElementCollection):
-            new_smc = create_new_smc(submodel_element_type)
-            strawberry_submodel_element_class = generate_strawberry_type_for_model(new_smc)
-            update_type_with_field(submodel_type, attribute_name, strawberry_submodel_element_class)
-            return
-        elif issubclass(submodel_element_type, list):
-            if issubclass(submodel_element_type[0], base.SubmodelElementCollection):
-                strawberry_submodel_element_class = generate_strawberry_type_for_model(submodel_element_type)
-                add_submodel_elements_to_submodel_type(submodel_type, attribute_name, List[strawberry_submodel_element_class])
-            else:
-                update_type_with_field(submodel_type, attribute_name, submodel_element_type)
-            return
-    except:
-        print("Resolving Union type <", submodel_element_type, "> in <", submodel_type.__name__,"> for attribute <", attribute_name,"> to be considered as > str > type in GraphQL router.")
+    # try:
+    if submodel_element_type._name == "List" or issubclass(submodel_element_type, list):
+        if issubclass(submodel_element_type.__args__[0], base.SubmodelElementCollection):
+            strawberry_submodel_element_class = generate_strawberry_type_for_model(submodel_element_type)
+            add_submodel_elements_to_submodel_type(submodel_type, attribute_name, List[strawberry_submodel_element_class])
+        else:
+            update_type_with_field(submodel_type, attribute_name, submodel_element_type)
+        return
+    elif issubclass(submodel_element_type, base.SubmodelElementCollection):
+        new_smc = create_new_smc(submodel_element_type)
+        strawberry_submodel_element_class = generate_strawberry_type_for_model(new_smc)
+        update_type_with_field(submodel_type, attribute_name, strawberry_submodel_element_class)
+        return
+    # TODO: fox union types
+    # except:
+    #     print("Resolving Union type <", submodel_element_type, "> in <", submodel_type.__name__,"> for attribute <", attribute_name,"> to be considered as > str > type in GraphQL router.")
     update_type_with_field(submodel_type, attribute_name, submodel_element_type)
 
 def generate_graphql_endpoint(models: List[Type[BaseModel]]) -> APIRouter:
@@ -157,7 +159,7 @@ def generate_graphql_endpoint(models: List[Type[BaseModel]]) -> APIRouter:
             
             @strawberry.field(name="get_all_" + model_name)
             async def get_all_models(self) -> List[strawberry_aas_class]:
-                aas_list = await get_all_aas_from_server()
+                aas_list = await get_all_aas_from_server(model)
                 return [strawberry_aas_class.from_pydantic(aas) for aas in aas_list]
 
     schema = strawberry.Schema(query=Query)

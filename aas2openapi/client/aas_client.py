@@ -5,6 +5,8 @@ from typing import List
 from basyx.aas import model
 from dotenv import load_dotenv
 
+from pydantic import BaseModel
+
 import aas2openapi
 from aas2openapi.client.submodel_client import get_all_basyx_submodels_from_server, post_submodel_to_server, put_submodel_to_server, submodel_is_on_server
 from aas2openapi.convert.convert_pydantic import ClientModel, get_vars
@@ -156,7 +158,7 @@ async def delete_aas_from_server(aas_id: str):
     )
 
 
-async def get_all_aas_from_server() -> List[base.AAS]:
+async def get_all_aas_from_server(pydantic_model: BaseModel) -> List[base.AAS]:
     """
     Function to get all AAS from the server
     Returns:
@@ -176,4 +178,5 @@ async def get_all_aas_from_server() -> List[base.AAS]:
     [obj_store.add(submodel) for submodel in submodels if not any(submodel.id == other_sm.id for other_sm in obj_store)]
 
     model_data = aas2openapi.convert_object_store_to_pydantic_models(obj_store)
+    model_data = [model for model in model_data if model.__class__.__name__ == pydantic_model.__name__]
     return model_data

@@ -8,6 +8,7 @@ from aas2openapi import models
 
 class BillOfMaterial(models.Submodel):
     components: typing.List[str]
+    primitive: bool
 
 
 class ProcessModel(models.Submodel):
@@ -28,7 +29,7 @@ example_product = Product(
         processes=["join", "screw"],
     ),
     bill_of_material=BillOfMaterial(
-        id_="a7cba3bcd", components=["stator", "rotor", "coil", "bearing"]
+        id_="a7cba3bcd", components=["stator", "rotor", "coil", "bearing"], primitive=False
     ),
 )
 obj_store = aas2openapi.convert_pydantic_model_to_aas(example_product)
@@ -51,7 +52,7 @@ middleware = Middleware()
 middleware.load_pydantic_model_instances([example_product])
 # middleware.load_aas_from_objectstore(obj_store) # graphQL not yet working
 middleware.generate_rest_api()
-# middleware.generate_graphql_api()
+middleware.generate_graphql_api()
 
 app = middleware.app
 

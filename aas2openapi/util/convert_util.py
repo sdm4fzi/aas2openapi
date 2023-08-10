@@ -201,7 +201,7 @@ def get_all_submodel_elements_from_submodel(model: Type[base.Submodel]) -> Dict[
     submodel_elements = {}
     for field in model.__fields__.values():
         if field.name != "description" and field.name != "id_short" and field.name != "semantic_id" and field.name != "id_":
-            submodel_elements[field.name] = field.type_
+            submodel_elements[field.name] = field.outer_type_
     return submodel_elements
 
 

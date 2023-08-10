@@ -1,7 +1,7 @@
 # aas2openapi - Middleware for Asset Administration Shell and openAPI 3.0
 
 ![Build-sucess](https://img.shields.io/badge/build-success-green)
-![Version](https://img.shields.io/badge/version-0.1.1-green)
+![Version](https://img.shields.io/badge/version-0.1.2-green)
 ![PyPI - Python Version](https://img.shields.io/badge/python-3.10|3.11|3.12-blue)
 [![DOI](https://zenodo.org/badge/672818560.svg)](https://zenodo.org/badge/latestdoi/672818560)
 
@@ -9,17 +9,17 @@ aas2openapi is a middleware for Asset Administration Shell (AAS) and openAPI 3.0
 
 ## Installation
 
-You can install the package using [poetry](https://python-poetry.org/) by running the following commands in the terminal:
+You can install the package using by running the following command in the terminal:
+
+```bash
+pip install git+https://github.com/sdm4fzi/aas2openapi.git@main
+```
+
+Alternatively, you can install the package with [poetry](https://python-poetry.org/) for development:
 
 ```bash
 poetry shell
 poetry install
-```
-
-Alternatively, you can install the package with pip by considering the wheel file in the [dist](dist/) folder:
-
-```bash
-pip install dist/aas2openapi-0.1.1-py3-none-any.whl
 ```
 
 Please note that the package is only compatible with Python 3.10 or higher.
@@ -113,7 +113,7 @@ We can either run the middleware now directly with python or make a docker build
 The repository already comes with a docker-compose file that can be used to start the AAS and Submodel-server. To start the docker-compose file, run the following command in the terminal:
 
 ```bash
-docker-compose -f docker-compose.yaml up
+docker-compose -f basyx-compose.yaml up
 ```
 
 We can now run the middleware script with python and access it at `http://localhost:8000/`. Documentation of the generated Rest API is at `http://localhost:8000/docs` and the openAPI Specification is available at `http://localhost:8000/openapi.json`. The GraphQL API is at `http://localhost:8000/graphql` and comes also with a graphical viewer.
