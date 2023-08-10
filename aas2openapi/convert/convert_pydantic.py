@@ -162,12 +162,12 @@ def create_submodel_element(
 def get_value_type_of_attribute(
     attribute: Union[str, int, float, bool]
 ) -> model.datatypes:
-    if isinstance(attribute, int):
+    if isinstance(attribute, bool):
+        return model.datatypes.Boolean
+    elif isinstance(attribute, int):
         return model.datatypes.Integer
     elif isinstance(attribute, float):
         return model.datatypes.Double
-    elif isinstance(attribute, bool):
-        return model.datatypes.Boolean
     else:
         return model.datatypes.String
 
