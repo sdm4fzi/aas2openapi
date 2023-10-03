@@ -26,10 +26,13 @@ import os
 load_dotenv()
 
 async def check_aas_and_sm_server_online():
-    aas_server_host = os.getenv("AAS_SERVER_HOST")
-    aas_server_port = int(os.getenv("AAS_SERVER_PORT"))
-    submodel_server_host = os.getenv("SUBMODEL_SERVER_HOST")
-    submodel_server_port = int(os.getenv("SUBMODEL_SERVER_PORT"))
+    try: 
+        aas_server_host = os.getenv("AAS_SERVER_HOST")
+        aas_server_port = int(os.getenv("AAS_SERVER_PORT"))
+        submodel_server_host = os.getenv("SUBMODEL_SERVER_HOST")
+        submodel_server_port = int(os.getenv("SUBMODEL_SERVER_PORT"))
+    except:
+        raise HTTPException(status_code=500, detail=f"Error 500: Could not read environment variables for AAS and Submodel Server.")
     if not is_server_online(aas_server_host, aas_server_port):
         raise HTTPException(status_code=503, detail=f"Eror 503: AAS Server cannot be reached at adress {aas_server_host}:{aas_server_port}")
     if not is_server_online(os.getenv("SUBMODEL_SERVER_HOST"), int(os.getenv("SUBMODEL_SERVER_PORT"))):

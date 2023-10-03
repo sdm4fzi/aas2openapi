@@ -10,7 +10,7 @@ readme = "README.md"
 python = "^3.10"
 pydantic = "^1.10.9"
 basyx-python-sdk= { git = "https://github.com/eclipse-basyx/basyx-python-sdk.git", rev="ab298a769b446d162b35fa4a8039713cc71371b1" }
-uvicorn = {extras = ["standard"], version = "^0.22.0"}
+uvicorn = {extras = ["standard"], version = "^0.21.0"}
 fastapi = "^0.97.0"
 openapi-python-client = "^0.14.1"
 ba-syx-aas-repository-client = {path = "ba-syx-aas-repository-client"}
