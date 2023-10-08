@@ -3,7 +3,6 @@ from __future__ import annotations
 import os
 from typing import List
 from basyx.aas import model
-from dotenv import load_dotenv
 
 from pydantic import BaseModel
 
@@ -19,9 +18,7 @@ from ba_syx_aas_repository_client.api.asset_administration_shell_repository_api 
 from fastapi import HTTPException
 
 
-load_dotenv()
-AAS_SERVER_ADRESS = "http://" + os.getenv("AAS_SERVER_HOST") + ":" + os.getenv("AAS_SERVER_PORT")
-SUBMODEL_SERVER_ADRESS = "http://" + os.getenv("SUBMODEL_SERVER_HOST") + ":" + os.getenv("SUBMODEL_SERVER_PORT")
+AAS_SERVER_ADRESS, SUBMODEL_SERVER_ADRESS = client_utils.load_aas_and_submodel_repository_adress()
 
 
 

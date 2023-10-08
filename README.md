@@ -1,7 +1,7 @@
 # aas2openapi - Middleware for Asset Administration Shell and openAPI 3.0
 
 ![Build-sucess](https://img.shields.io/badge/build-success-green)
-![Version](https://img.shields.io/badge/version-0.1.3-green)
+![Version](https://img.shields.io/badge/version-0.1.5-green)
 ![PyPI - Python Version](https://img.shields.io/badge/python-3.10|3.11|3.12-blue)
 [![DOI](https://zenodo.org/badge/672818560.svg)](https://zenodo.org/badge/latestdoi/672818560)
 
@@ -14,6 +14,13 @@ You can install the package using by running the following command in the termin
 ```bash
 pip install git+https://github.com/sdm4fzi/aas2openapi.git@main
 ```
+
+You can also install the package within a [potry](https://python-poetry.org/) project by adding the following line to the pyproject.toml file:
+
+```bash
+aas2openapi = { git = "ssh://git@github.com/sdm4fzi/aas2openapi.git", tag = "0.1.5" }
+```
+
 
 Alternatively, you can install the package with [poetry](https://python-poetry.org/) for development:
 
@@ -34,10 +41,7 @@ At first, we create a simple data model with the basic building blocks (AAS and 
 
 ```python
 import typing
-from dotenv import load_dotenv
 from aas2openapi import models
-
-load_dotenv()
 
 class BillOfMaterial(models.Submodel):
     components: typing.List[str]
@@ -119,9 +123,21 @@ The repository already comes with a docker-compose file that can be used to star
 docker-compose -f basyx-compose.yaml up
 ```
 
-We can now run the middleware script with python and access it at `http://localhost:8000/`. Documentation of the generated Rest API is at `http://localhost:8000/docs` and the openAPI Specification is available at `http://localhost:8000/openapi.json`.
+We can now run the middleware script with python and access it at `http://localhost:8000/`. Documentation of the generated Rest API is at `http://localhost:8000/docs` and the openAPI Specification is available at `http://localhost:8000/openapi.json`. 
 
-Lastly, we can build a docker image of the middleware and run it in a docker-compose as a container. To do so, just adjust the provided Dockerfile and docker-compose.yaml of this package to fit your needs based on the provided example in the file docker_app.py.
+If you want to change the adresses and ports of the AAS and Submodel-server, you can do so by adding a `.env` file to the root directory of the package. The file should contain speicifications similar to that in the `.env.example` file of the package.
+
+Lastly, we can build a docker image of the middleware and run it in a docker-compose as a container. To do so, just adjust the provided Dockerfile and docker-compose.yaml of this package to fit your needs based on the provided example in the file docker_app.py. To build the docker image, run the following command in the terminal:
+
+```bash
+docker-compose build
+```
+
+lastly, we can run the docker-compose file with the following command and start aas2openapi, AAS server and submodel server at the same time:
+    
+```bash
+docker-compose up
+```
 
 ## Contributing
 

@@ -7,12 +7,16 @@ import aas2openapi
 import json
 
 from basyx.aas import model
+
 from aas2openapi.middleware.graphql_routers import generate_graphql_endpoint
 from aas2openapi.middleware.rest_routers import generate_endpoints_from_model, get_pydantic_model_from_imstances
 import aas2openapi
 
 
 class Middleware:
+    """
+    Middleware that can be used to generate a REST or GraphQL API from aas' and submodels either in pydanctic models or in aas object store format.
+    """
 
     def __init__(self):
         self.models: typing.List[typing.Type[BaseModel]] = []

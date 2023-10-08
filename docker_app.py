@@ -27,7 +27,7 @@ from aas2openapi.middleware.middleware import Middleware
 middleware = Middleware()
 middleware.load_pydantic_model_instances(models)
 middleware.generate_rest_api()
-middleware.generate_graphql_api()
+# middleware.generate_graphql_api()
 
 app = middleware.app
 

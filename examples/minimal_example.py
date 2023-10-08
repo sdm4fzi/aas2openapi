@@ -3,15 +3,6 @@ import aas2openapi
 from aas2openapi.middleware import Middleware
 from aas2openapi import models
 
-from dotenv import load_dotenv
-
-# load the .env file for variables of the middleware
-
-load_dotenv()
-
-# Create some examplary models that should be used in the middleware
-
-
 class BillOfMaterial(models.Submodel):
     components: typing.List[str]
 
@@ -48,7 +39,6 @@ with open("examples/simple_aas_and_submodels.json", "w", encoding="utf-8") as js
 # Reverse transformation
 
 data_model = aas2openapi.convert_object_store_to_pydantic_models(obj_store)
-print(data_model)
 
 # Create the middleware and load the models
 

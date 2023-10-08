@@ -162,3 +162,4 @@ cython_debug/
 dist/
 
 examples/simple_aas_and_submodels.json
+examples/simple_aas_and_submodels.json

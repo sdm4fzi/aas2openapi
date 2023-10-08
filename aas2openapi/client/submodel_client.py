@@ -3,7 +3,6 @@ from __future__ import annotations
 import os
 import asyncio
 from typing import List
-from dotenv import load_dotenv
 
 from fastapi import HTTPException
 import aas2openapi
@@ -18,10 +17,8 @@ from ba_syx_submodel_repository_client import Client as SMClient
 from ba_syx_submodel_repository_client.api.submodel_repository_api import delete_submodel_by_id, get_all_submodels, get_submodel_by_id, post_submodel, put_submodel_by_id
 from basyx.aas import model
 
-load_dotenv()
-AAS_SERVER_ADRESS = "http://" + os.getenv("AAS_SERVER_HOST") + ":" + os.getenv("AAS_SERVER_PORT")
-SUBMODEL_SERVER_ADRESS = "http://" + os.getenv("SUBMODEL_SERVER_HOST") + ":" + os.getenv("SUBMODEL_SERVER_PORT")
 
+AAS_SERVER_ADRESS, SUBMODEL_SERVER_ADRESS = client_utils.load_aas_and_submodel_repository_adress()
 
 async def get_basyx_submodel_from_server(submodel_id: str) -> model.Submodel:
     """
