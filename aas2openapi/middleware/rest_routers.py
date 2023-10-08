@@ -201,6 +201,7 @@ def set_required_fields(model: Type[BaseModel], origin_model: Type[BaseModel]) -
     Returns:
         Type[BaseModel]: Pydantic model with the required fields set.
     """
+    # FIXME: default values are not copied for some reason if required is set to True....
     for field_name, field in origin_model.__fields__.items():
         if field.required:
             model.__fields__[field_name].required = True
