@@ -3,8 +3,14 @@ import aas2openapi
 from aas2openapi.middleware import Middleware
 from aas2openapi import models
 
+
+class BillOfMaterialInfo(models.SubmodelElementCollection):
+    manufacterer: str
+    typi: str
+
 class BillOfMaterial(models.Submodel):
     components: typing.List[str]
+    bill_of_material_info: BillOfMaterialInfo
 
 
 class ProcessModel(models.Submodel):
@@ -25,7 +31,11 @@ example_product = Product(
         processes=["join", "screw"],
     ),
     bill_of_material=BillOfMaterial(
-        id_="a7cba3bcd", components=["stator", "rotor", "coil", "bearing"]
+        id_="a7cba3bcd", components=["stator", "rotor", "coil", "bearing"],
+        bill_of_material_info=BillOfMaterialInfo(
+            id_short="aseede",
+            manufacterer="Siemens", typi="1234", 
+        )
     ),
 )
 obj_store = aas2openapi.convert_pydantic_model_to_aas(example_product)

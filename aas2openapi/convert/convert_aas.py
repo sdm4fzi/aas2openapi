@@ -69,7 +69,7 @@ def convert_submodel_element_to_named_dict(sm_element: model.SubmodelElement) ->
     """
     if isinstance(sm_element, model.SubmodelElementCollection):
         attribute_value = convert_submodel_collection_to_pydantic_model(sm_element)
-        attribute_name = type(attribute_value).__name__
+        attribute_name = convert_util.get_attribute_name_of_basyx_model(sm_element)
     elif isinstance(sm_element, model.SubmodelElementList):
         attribute_value = convert_submodel_list_to_pydantic_model(sm_element)
         attribute_name = convert_util.get_attribute_name_of_basyx_model(sm_element)
