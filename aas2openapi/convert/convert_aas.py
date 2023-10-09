@@ -50,15 +50,15 @@ def convert_aas_to_pydantic_model(aas: model.AssetAdministrationShell, pydantic_
         description=convert_util.get_str_description(aas.description),
     )
     dict_pydantic_base_aas = pydantic_base_aas.dict()
+    aas_submodel_ids = [sm.get_identifier() for sm in aas.submodel]
 
     for counter, sm in enumerate(pydantic_submodels):
-        # attribute_name_of_submodel = get_class_name_from_basyx_model(sm)
-        # lower case the first letter of the class name and change cammel case to underscore seperated words
         class_name = type(sm).__name__
-        attribute_name_of_submodel = convert_util.convert_camel_case_to_underscrore_str(class_name)
-        dict_pydantic_base_aas.update({
-            attribute_name_of_submodel: sm
-            })
+        if sm.id_ in aas_submodel_ids:
+            attribute_name_of_submodel = convert_util.convert_camel_case_to_underscrore_str(class_name)
+            dict_pydantic_base_aas.update({
+                attribute_name_of_submodel: sm
+                })
     model_type = create_model(aas_class_name, **dict_pydantic_base_aas, __base__=base.AAS)
     return model_type(**dict_pydantic_base_aas)
 
