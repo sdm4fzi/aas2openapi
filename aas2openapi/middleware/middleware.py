@@ -1,16 +1,15 @@
 import typing
-from pydantic import BaseModel, parse_obj_as, create_model, Field
+from pydantic import BaseModel, parse_obj_as
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-import aas2openapi
 import json
-
 from basyx.aas import model
 
 from aas2openapi.middleware.graphql_routers import generate_graphql_endpoint
-from aas2openapi.middleware.rest_routers import generate_endpoints_from_model, get_pydantic_model_from_imstances
+from aas2openapi.middleware.rest_routers import generate_endpoints_from_model
 import aas2openapi
+from aas2openapi.util.convert_util import set_example_values, get_pydantic_model_from_dict, get_pydantic_models_from_instances
 
 
 class Middleware:
@@ -21,7 +20,6 @@ class Middleware:
     def __init__(self):
         self.models: typing.List[typing.Type[BaseModel]] = []
         self._app: typing.Optional[FastAPI] = None
-
 
     @property
     def app(self):
@@ -52,10 +50,29 @@ class Middleware:
                 allow_headers=["*"],
             )
             self._app = app
+
             @app.get("/", response_model=str)
             async def root():
                 return "Welcome to aas2openapi Middleware!"
+
         return self._app
+
+    def load_json_models(self, json_models: dict, file_path: str):
+        """
+        Functions that loads aas' and submodels from a json file into the middleware that can be used for synchronization.
+
+        The function can either be used with a dict that contains the aas' and submodels or with a json file path, so the function reads the file.
+
+        Args:
+            json_models (dict): Dictionary of aas' and submodels.
+            file_path (str): Path to the json file.
+        """
+        if not json_models and file_path:
+            with open(file_path) as json_file:
+                json_models = json.load(json_file)
+        for model_name, model_dict in json_models.items():
+            pydantic_model = get_pydantic_model_from_dict(model_dict, model_name)
+            self.models.append(pydantic_model)
 
     def load_pydantic_model_instances(self, instances: typing.List[BaseModel]):
         """
@@ -64,7 +81,8 @@ class Middleware:
         Args:
             instances (typing.List[BaseModel]): List of pydantic model instances.
         """
-        self.models = get_pydantic_model_from_imstances(instances)
+        self.models = get_pydantic_models_from_instances(instances)
+
 
     def load_pydantic_models(self, models: typing.List[typing.Type[BaseModel]]):
         """
@@ -73,9 +91,11 @@ class Middleware:
         Args:
             models (typing.List[typing.Type[BaseModel]]): List of pydantic models.
         """
+        for model in models:
+            set_example_values(model)
         self.models = models
 
-    def load_aas_from_objectstore(self, models: model.DictObjectStore):
+    def load_aas_objectstore(self, models: model.DictObjectStore):
         """
         Functions that loads multiple aas and their submodels into the middleware that can be used for synchronization.
 
@@ -83,8 +103,8 @@ class Middleware:
             models (typing.List[model.DictObjectStore]): Object store of aas' and submodels
         """
         instances = aas2openapi.convert_object_store_to_pydantic_models(models)
-        self.models = get_pydantic_model_from_imstances(instances)
-            
+        self.models = get_pydantic_models_from_instances(instances)
+
     def generate_rest_api(self):
         """
         Generates a REST API with CRUD operations for aas' and submodels from the loaded models.

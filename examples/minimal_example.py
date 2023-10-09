@@ -29,11 +29,14 @@ example_product = Product(
     process_model=ProcessModel(
         id_="a8cd10ed",
         processes=["join", "screw"],
+        semantic_id="hunder",
     ),
     bill_of_material=BillOfMaterial(
         id_="a7cba3bcd", components=["stator", "rotor", "coil", "bearing"],
+        semantic_id="hund",
         bill_of_material_info=BillOfMaterialInfo(
             id_short="aseede",
+            semantic_id="hahaah",
             manufacterer="Siemens", typi="1234", 
         )
     ),
@@ -53,6 +56,8 @@ data_model = aas2openapi.convert_object_store_to_pydantic_models(obj_store)
 # Create the middleware and load the models
 
 middleware = Middleware()
+# middleware.load_json_models(file_path="examples/simple_aas_and_submodels.json")
+# middleware.load_json_models(vars(example_product))
 # middleware.load_pydantic_models([Product])
 middleware.load_pydantic_model_instances([example_product])
 # middleware.load_aas_from_objectstore(obj_store) # graphQL not yet working

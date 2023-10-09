@@ -4,8 +4,10 @@ from typing import List, Type, Dict
 from basyx.aas import model
 import ast
 
-from pydantic import BaseModel
+from pydantic import BaseModel, create_model, BaseConfig
 import typing
+
+from pydantic.fields import FieldInfo, ModelField
 
 from aas2openapi.models import base
 
@@ -220,3 +222,162 @@ def get_all_submodels_from_object_store(
         if isinstance(item, model.Submodel):
             submodels.append(item)
     return submodels
+
+
+def get_field_default_value(field: ModelField) -> typing.Any:
+    """
+    Function to get the default values of a pydantic model field. If no default is given, the function tries to infer a default based on the type.
+
+    Args:
+        field (ModelField): Pydantic model field.
+    
+    Returns:
+        typing.Any: Missing default value.
+    """
+    if field.default:
+        return field.default
+    elif field.default_factory:
+        return field.default_factory()
+    elif field.type_ == str:
+        return "string"
+    elif field.type_ == bool:
+        return False
+    elif field.type_ == int:
+        return 1
+    elif field.type_ == float:
+        return 1.0
+    elif field.type_ == list:
+        return []
+
+def set_example_values(model: Type[BaseModel]) -> Type[BaseModel]:
+    """
+    Sets the example values of a pydantic model based on its default values.
+
+    Args:
+        model (Type[BaseModel]): Pydantic model.
+
+    Returns:
+        Type[BaseModel]: Pydantic model with the example values set.
+    """
+    example_dict = {}
+    for field_name, field in model.__fields__.items():
+        if isinstance(field.default, BaseModel) or issubclass(field.type_, BaseModel):
+            class NewSMConfig(BaseConfig):
+                schema_extra = {"example": field.default.json()}
+            model.__fields__[field_name].type_.Config = NewSMConfig
+            model.__fields__[field_name].type_.__config__ = NewSMConfig
+            model.__fields__[field_name].outer_type_.Config = NewSMConfig
+            model.__fields__[field_name].outer_type_.__config = NewSMConfig
+        example_dict[field_name] = get_field_default_value(field)
+    serialized_example = model(**example_dict).json()
+    class NewConfig(BaseConfig):
+        schema_extra = {"example": serialized_example}
+    model.Config = NewConfig
+    model.__config__ = NewConfig
+    return model
+
+
+def set_required_fields(
+    model: Type[BaseModel], origin_model: Type[BaseModel]
+) -> Type[BaseModel]:
+    """
+    Sets the required fields of a pydantic model.
+
+    Args:
+        model (Type[BaseModel]): Pydantic model.
+        origin_model (Type[BaseModel]): Pydantic model from which the required fields should be copied.
+
+    Returns:
+        Type[BaseModel]: Pydantic model with the required fields set.
+    """
+    for field_name, field in origin_model.__fields__.items():
+        if isinstance(field.default, BaseModel) or issubclass(field.type_, BaseModel):
+            new_type = set_required_fields(model.__fields__[field_name].type_, field.type_)
+            model.__fields__[field_name].type_ = new_type
+        if field.required:
+            model.__fields__[field_name].required = True          
+    return model
+
+
+def set_default_values(
+    model: Type[BaseModel], origin_model: Type[BaseModel]
+) -> Type[BaseModel]:
+    """
+    Sets the default values and default factory of a pydantic model based on a original model.
+
+    Args:
+        model (Type[BaseModel]): Pydantic model where default values should be removed.
+
+    Returns:
+        Type[BaseModel]: Pydantic model with the default values set.
+    """
+    for field_name, field in origin_model.__fields__.items():
+        if isinstance(field.default, BaseModel) or issubclass(field.type_, BaseModel):
+            new_type = set_default_values(model.__fields__[field_name].type_, field.type_)
+            model.__fields__[field_name].type_ = new_type
+        if not field.required and (
+            field.default
+            or field.default == ""
+            or field.default == 0
+            or field.default == 0.0
+            or field.default == False
+            or field.default == []
+            or field.default == {}
+        ):
+            model.__fields__[field_name].default = field.default
+            model.__fields__[field_name].field_info = FieldInfo(default=field.default)
+        else:
+            model.__fields__[field_name].default = None
+            model.__fields__[field_name].field_info = FieldInfo(default=None)
+
+        if not field.required and field.default_factory:
+            model.__fields__[field_name].default_factory = field.default_factory
+        else:
+            model.__fields__[field_name].default_factory = None
+    return model
+
+
+def get_pydantic_models_from_instances(
+    instances: List[BaseModel],
+) -> List[Type[BaseModel]]:
+    """
+    Functions that creates pydantic models from instances.
+
+    Args:
+        instances (typing.List[BaseModel]): List of pydantic model instances.
+
+    Returns:
+        List[Type[BaseModel]]: List of pydantic models.
+    """
+    models = []
+    for instance in instances:
+        model_name = type(instance).__name__
+        pydantic_model = create_model(model_name, **vars(instance))
+        pydantic_model = set_example_values(pydantic_model)
+        pydantic_model = set_required_fields(pydantic_model, instance.__class__)
+        pydantic_model = set_default_values(pydantic_model, instance.__class__)
+        models.append(pydantic_model)
+    return models
+
+
+def get_pydantic_model_from_dict(
+    dict_values: dict, model_name: str, all_fields_required: bool = False
+) -> Type[BaseModel]:
+    """
+    Functions that creates pydantic model from dict.
+
+    Args:
+        dict_values (dict): Dictionary of values.
+        model_name (str): Name of the model.
+        all_fields_required (bool, optional): If all fields should be required (non-Optional) in the model. Defaults to False.
+    Returns:
+        Type[BaseModel]: Pydantic model.
+    """
+    pydantic_model = create_model(model_name, **dict_values)
+    pydantic_model = set_example_values(pydantic_model)
+    if all_fields_required:
+        for field_name, field in pydantic_model.__fields__.items():
+            field.required = True
+            field.default = None
+            field.field_info = FieldInfo(default=None)
+    return pydantic_model

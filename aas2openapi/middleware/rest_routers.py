@@ -1,5 +1,5 @@
-from fastapi import HTTPException, APIRouter, Request
-from pydantic import BaseModel, create_model
+from fastapi import HTTPException, APIRouter
+from pydantic import BaseModel
 from pydantic.fields import ModelField
 
 from typing import List, Type, Dict
@@ -18,9 +18,8 @@ from aas2openapi.client.submodel_client import (
     delete_submodel_from_server,
 )
 from aas2openapi.models import base
-from aas2openapi.util.convert_util import get_all_submodels_from_model, convert_camel_case_to_underscrore_str
+from aas2openapi.util.convert_util import get_all_submodels_from_model
 from aas2openapi.util.client_utils import is_server_online, load_aas_and_submodel_repository_adress
-import os
 
 async def check_aas_and_sm_server_online():
     AAS_SERVER, SUBMODEL_SERVER = load_aas_and_submodel_repository_adress()
@@ -190,40 +189,3 @@ def generate_endpoints_from_model(pydantic_model: Type[BaseModel]) -> List[APIRo
     return routers
 
 
-def set_required_fields(model: Type[BaseModel], origin_model: Type[BaseModel]) -> Type[BaseModel]:
-    """
-    Sets the required fields of a pydantic model.
-
-    Args:
-        model (Type[BaseModel]): Pydantic model.
-        origin_model (Type[BaseModel]): Pydantic model from which the required fields should be copied.
-
-    Returns:
-        Type[BaseModel]: Pydantic model with the required fields set.
-    """
-    # FIXME: default values are not copied for some reason if required is set to True....
-    for field_name, field in origin_model.__fields__.items():
-        if field.required:
-            model.__fields__[field_name].required = True
-    return model
-
-
-def get_pydantic_model_from_imstances(
-    instances: List[BaseModel],
-) -> List[Type[BaseModel]]:
-    """
-    Functions that creates pydantic models from instances.
-
-    Args:
-        instances (typing.List[BaseModel]): List of pydantic model instances.
-
-    Returns:
-        List[Type[BaseModel]]: List of pydantic models.
-    """
-    models = []
-    for instance in instances:
-        model_name = type(instance).__name__
-        pydantic_model = create_model(model_name, **vars(instance))
-        pydantic_model = set_required_fields(pydantic_model, instance.__class__)
-        models.append(pydantic_model)
-    return models
