@@ -95,10 +95,11 @@ def generate_submodel_endpoints_from_model(
             await check_aas_and_sm_server_online()
             try:
                 await get_submodel_from_aas_id_and_class_name(item_id, submodel_name)
+                raise HTTPException(f"Submodel already exists for aas with id {item_id}. Use PUT method to update the submodel.")
             except HTTPException as e:
                 if e.status_code == 400:
                     await post_submodel_to_server(item)
-                    return item
+                    return {"message": f"Succesfully created submodel {submodel_name} of aas with id {item_id}"}
                 else:
                     raise e
     
@@ -107,7 +108,7 @@ def generate_submodel_endpoints_from_model(
         await check_aas_and_sm_server_online()
         submodel = await get_submodel_from_aas_id_and_class_name(item_id, submodel_name)
         await put_submodel_to_server(item)
-        return {"message": f"Succesfully updated submodel with id {item_id}"}
+        return {"message": f"Succesfully updated submodel {submodel_name} of aas with id {item_id}"}
 
     if optional_submodel:
         @router.delete("/")
@@ -115,7 +116,7 @@ def generate_submodel_endpoints_from_model(
             await check_aas_and_sm_server_online()
             submodel = await get_submodel_from_aas_id_and_class_name(item_id, submodel_name)
             await delete_submodel_from_server(submodel.id_)
-            return {"message": f"Succesfully deleted submodel with id {item_id}"}
+            return {"message": f"Succesfully deleted submodel {submodel_name} of aas with id {item_id}"}
 
     return router
 
@@ -142,11 +143,11 @@ def generate_aas_endpoints_from_model(pydantic_model: Type[BaseModel]) -> APIRou
         data_retrieved = await get_all_aas_from_server(pydantic_model)
         return data_retrieved
 
-    @router.post(f"/", response_model=pydantic_model)
+    @router.post(f"/")
     async def post_item(item: pydantic_model) -> Dict[str, str]:
         await check_aas_and_sm_server_online()
         await post_aas_to_server(item)
-        return item
+        return {"message": f"Created aas with id {item.id_}"}
 
     @router.get("/{item_id}", response_model=pydantic_model)
     async def get_item(item_id: str):
@@ -158,13 +159,13 @@ def generate_aas_endpoints_from_model(pydantic_model: Type[BaseModel]) -> APIRou
     async def put_item(item_id: str, item: pydantic_model) -> Dict[str, str]:
         await check_aas_and_sm_server_online()
         await put_aas_to_server(item)
-        return {"message": "Item updated"}
+        return {"message": f"Succesfully updated aas with id {item.id_}"}
 
     @router.delete("/{item_id}")
     async def delete_item(item_id: str):
         await check_aas_and_sm_server_online()
         await delete_aas_from_server(item_id)
-        return {"message": "Item deleted"}
+        return {"message": f"Succesfully deleted aas with id {item_id}"}
 
 
     return router

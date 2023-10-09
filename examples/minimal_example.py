@@ -25,17 +25,17 @@ class Product(models.AAS):
 # Test the transformation capabilities of aas2openapi
 
 example_product = Product(
-    id_="bc2119e48d0",
+    id_="Product1",
     process_model=ProcessModel(
-        id_="a8cd10ed",
+        id_="PMP1",
         processes=["join", "screw"],
         semantic_id="hunder",
     ),
     bill_of_material=BillOfMaterial(
-        id_="a7cba3bcd", components=["stator", "rotor", "coil", "bearing"],
+        id_="BOMP1", components=["stator", "rotor", "coil", "bearing"],
         semantic_id="hund",
         bill_of_material_info=BillOfMaterialInfo(
-            id_short="aseede",
+            id_short="BOMInfoP1",
             semantic_id="hahaah",
             manufacterer="Siemens", typi="1234", 
         )
