@@ -133,10 +133,50 @@ We can either run the middleware now directly with python or make a docker build
 The repository already comes with a docker-compose file that can be used to start the AAS and Submodel-server. To start the docker-compose file, run the following command in the terminal:
 
 ```bash
-docker-compose -f basyx-compose.yaml up
+docker-compose -f docker-compose-dev.yaml up
 ```
 
-We can now run the middleware script with python and access it at `http://localhost:8000/`. Documentation of the generated Rest API is at `http://localhost:8000/docs` and the openAPI Specification is available at `http://localhost:8000/openapi.json`. 
+We can now run the middleware script with python and access it at `http://localhost:8000/`. Documentation of the generated Rest API is at `http://localhost:8000/docs` available by a swaggerUI and the openAPI Specification is available at `http://localhost:8000/openapi.json`. You can use the swaggerUI to post some AAS or this exemplary command (with bash console):
+    
+```bash
+    curl -X 'POST' \
+  'http://localhost:8000/Product/' \
+  -H 'accept: application/json' \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "id_": "P1",
+  "description": "string",
+  "id_short": "P1",
+  "bill_of_material": {
+    "id_": "bomP1",
+    "description": "string",
+    "id_short": "bomP1",
+    "semantic_id": "string",
+    "components": [
+      "string1",
+      "string2"
+    ],
+    "product_count": 123,
+    "bill_of_material_info": {
+      "id_short": "bominfop1",
+      "description": "string",
+      "semantic_id": "string",
+      "manufacterer": "Siemensss",
+      "typi": "motor"
+    }
+  },
+  "process_model": {
+    "id_": "pmp1",
+    "description": "",
+    "id_short": "pmp1",
+    "semantic_id": null,
+    "processes": [
+      "join",
+      "screw"
+    ]
+  }
+}'
+```
 
 If you want to change the adresses and ports of the AAS and Submodel-server, you can do so by adding a `.env` file to the root directory of the package. The file should contain speicifications similar to that in the `.env.example` file of the package.
 
@@ -151,6 +191,14 @@ lastly, we can run the docker-compose file with the following command and start 
 ```bash
 docker compose up
 ```
+
+If you want to start the middleware also with a user interface for the AAS and a mongo db backend for AAS, you can use the following command:
+
+```bash
+docker compose -f docker-compose-ui.yaml up -d
+```
+
+The user interface is then available at `http://localhost:3000/`. After posting some AAS with the middleware (see above), you can add the AAS to the user interface by clicking on the "+" button and entering the AAS id (base64 encoded). The AAS is then available in the user interface.
 
 ## Contributing
 
