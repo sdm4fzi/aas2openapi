@@ -1,7 +1,7 @@
 # aas2openapi - Middleware for Asset Administration Shell and openAPI 3.0
 
 ![Build-sucess](https://img.shields.io/badge/build-success-green)
-![Version](https://img.shields.io/badge/version-0.1.7-green)
+![Version](https://img.shields.io/badge/version-0.1.8-green)
 ![PyPI - Python Version](https://img.shields.io/badge/python-3.10|3.11|3.12-blue)
 [![DOI](https://zenodo.org/badge/672818560.svg)](https://zenodo.org/badge/latestdoi/672818560)
 
@@ -18,7 +18,7 @@ pip install git+https://github.com/sdm4fzi/aas2openapi.git@main
 You can also install the package within a [potry](https://python-poetry.org/) project by adding the following line to the pyproject.toml file:
 
 ```bash
-aas2openapi = { git = "ssh://git@github.com/sdm4fzi/aas2openapi.git", tag = "0.1.7" }
+aas2openapi = { git = "ssh://git@github.com/sdm4fzi/aas2openapi.git", tag = "0.1.8" }
 ```
 
 
