@@ -1,0 +1,34 @@
+{
+    "Product": {
+        "id_": "P1",
+        "description": "",
+        "id_short": "P1",
+        "bill_of_material": {
+            "id_": "bomP1",
+            "description": "string",
+            "id_short": "bomP1",
+            "semantic_id": "string",
+            "components": [
+                "string1",
+                "string2"
+            ],
+            "product_count": 123,
+            "bill_of_material_info": {
+                "id_short": "bominfop1",
+                "description": "string",
+                "semantic_id": "string",
+                "manufacterer": "Siemensss",
+                "product_type": "motor"
+            }
+        },
+        "process_model": {
+            "id_": "pmp1",
+            "description": "",
+            "id_short": "pmp1",
+            "processes": [
+                "join",
+                "screw"
+            ]
+        }
+    }
+}

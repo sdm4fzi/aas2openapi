@@ -1,7 +1,7 @@
 # aas2openapi - Middleware for Asset Administration Shell and openAPI 3.0
 
 ![Build-sucess](https://img.shields.io/badge/build-success-green)
-![Version](https://img.shields.io/badge/version-0.1.6-green)
+![Version](https://img.shields.io/badge/version-0.1.7-green)
 ![PyPI - Python Version](https://img.shields.io/badge/python-3.10|3.11|3.12-blue)
 [![DOI](https://zenodo.org/badge/672818560.svg)](https://zenodo.org/badge/latestdoi/672818560)
 
@@ -18,7 +18,7 @@ pip install git+https://github.com/sdm4fzi/aas2openapi.git@main
 You can also install the package within a [potry](https://python-poetry.org/) project by adding the following line to the pyproject.toml file:
 
 ```bash
-aas2openapi = { git = "ssh://git@github.com/sdm4fzi/aas2openapi.git", tag = "0.1.6" }
+aas2openapi = { git = "ssh://git@github.com/sdm4fzi/aas2openapi.git", tag = "0.1.7" }
 ```
 
 
@@ -40,14 +40,18 @@ In the following, we will consider a minimal example to demonstrate the usage of
 At first, we create a simple data model with the basic building blocks (AAS and Submodel) of aas2openapi:
 
 ```python
-import typing
-from aas2openapi import models
+class BillOfMaterialInfo(models.SubmodelElementCollection):
+    manufacterer: str
+    product_type: str
 
 class BillOfMaterial(models.Submodel):
     components: typing.List[str]
+    bill_of_material_info: BillOfMaterialInfo
+
 
 class ProcessModel(models.Submodel):
     processes: typing.List[str]
+
 
 class Product(models.AAS):
     bill_of_material: BillOfMaterial
@@ -58,13 +62,20 @@ The data model consists of a product that has a process model and a bill of mate
 
 ```python
 example_product = Product(
-    id_="bc2119e48d0",
+    id_="Product1",
     process_model=ProcessModel(
-        id_="a8cd10ed",
+        id_="PMP1",
         processes=["join", "screw"],
+        semantic_id="hunder",
     ),
     bill_of_material=BillOfMaterial(
-        id_="a7cba3bcd", components=["stator", "rotor", "coil", "bearing"]
+        id_="BOMP1", components=["stator", "rotor", "coil", "bearing"],
+        semantic_id="hund",
+        bill_of_material_info=BillOfMaterialInfo(
+            id_short="BOMInfoP1",
+            semantic_id="hahaah",
+            manufacterer="Siemens", typi="1234", 
+        )
     ),
 )
 ```
@@ -106,11 +117,13 @@ import uvicorn
 uvicorn.run(app)
 ```
 
-Besides loading the data models from instances,  we can also generate it from types or AAS. To do so, simply replace the `load_pydantic_model_instances` method with `load_pydantic_model_types` or `load_aas`:
+Besides loading the data models from instances,  we can also generate it directly from its python type, from a JSON-object or from an AAS. To do so, simply replace the `load_pydantic_model_instances` method with `load_pydantic_models` to load from types or `load_aas_objectstore` to load from an AAS object store or `load_json_models` to load from serialized JSON-objects:
 
 ```python
 middleware.load_pydantic_model_types([Product])
 middleware.load_aas_from_objectstore(obj_store)
+middleware.load_json_models(file_path="examples/example_json_model.json")
+
 ```
 
 However, no examples can be provided when loading from types.
@@ -130,13 +143,13 @@ If you want to change the adresses and ports of the AAS and Submodel-server, you
 Lastly, we can build a docker image of the middleware and run it in a docker-compose as a container. To do so, just adjust the provided Dockerfile and docker-compose.yaml of this package to fit your needs based on the provided example in the file docker_app.py. To build the docker image, run the following command in the terminal:
 
 ```bash
-docker-compose build
+docker compose build
 ```
 
 lastly, we can run the docker-compose file with the following command and start aas2openapi, AAS server and submodel server at the same time:
     
 ```bash
-docker-compose up
+docker compose up
 ```
 
 ## Contributing

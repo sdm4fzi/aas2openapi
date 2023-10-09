@@ -20,6 +20,9 @@ services:
       - AAS_SERVER_PORT=8081
       - SUBMODEL_SERVER_HOST=host.docker.internal
       - SUBMODEL_SERVER_PORT=8082
+    depends_on:
+      - aas-repository
+      - sm-repository
     networks:
       - backend
 

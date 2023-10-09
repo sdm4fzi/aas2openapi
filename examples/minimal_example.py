@@ -6,7 +6,7 @@ from aas2openapi import models
 
 class BillOfMaterialInfo(models.SubmodelElementCollection):
     manufacterer: str
-    typi: str
+    product_type: str
 
 class BillOfMaterial(models.Submodel):
     components: typing.List[str]
@@ -54,13 +54,12 @@ with open("examples/simple_aas_and_submodels.json", "w", encoding="utf-8") as js
 data_model = aas2openapi.convert_object_store_to_pydantic_models(obj_store)
 
 # Create the middleware and load the models
-
 middleware = Middleware()
-# middleware.load_json_models(file_path="examples/simple_aas_and_submodels.json")
-# middleware.load_json_models(vars(example_product))
+
 # middleware.load_pydantic_models([Product])
 middleware.load_pydantic_model_instances([example_product])
-# middleware.load_aas_from_objectstore(obj_store) # graphQL not yet working
+# middleware.load_aas_objectstore(obj_store)
+# middleware.load_json_models(file_path="examples/example_json_model.json")
 middleware.generate_rest_api()
 # middleware.generate_graphql_api()
 
