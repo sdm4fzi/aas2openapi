@@ -57,7 +57,7 @@ class Middleware:
 
         return self._app
 
-    def load_json_models(self, json_models: dict, file_path: str):
+    def load_json_models(self, json_models: dict=None, file_path: str=None):
         """
         Functions that loads aas' and submodels from a json file into the middleware that can be used for synchronization.
 
@@ -67,11 +67,13 @@ class Middleware:
             json_models (dict): Dictionary of aas' and submodels.
             file_path (str): Path to the json file.
         """
+        if not json_models and not file_path:
+            raise ValueError("Either json_models or file_path must be specified.")
         if not json_models and file_path:
             with open(file_path) as json_file:
                 json_models = json.load(json_file)
-        for model_name, model_dict in json_models.items():
-            pydantic_model = get_pydantic_model_from_dict(model_dict, model_name)
+        for model_name, model_values in json_models.items():
+            pydantic_model = get_pydantic_model_from_dict(model_values, model_name)
             self.models.append(pydantic_model)
 
     def load_pydantic_model_instances(self, instances: typing.List[BaseModel]):
@@ -91,8 +93,6 @@ class Middleware:
         Args:
             models (typing.List[typing.Type[BaseModel]]): List of pydantic models.
         """
-        for model in models:
-            set_example_values(model)
         self.models = models
 
     def load_aas_objectstore(self, models: model.DictObjectStore):

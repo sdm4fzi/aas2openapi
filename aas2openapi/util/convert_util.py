@@ -159,6 +159,7 @@ def get_data_specification_for_pydantic_model(
 def get_data_specification_for_attribute_name(
     attribute_name: str,
 ) -> model.EmbeddedDataSpecification:
+    # TODO: also specify here if the attribute is required or not!
     return model.EmbeddedDataSpecification(
         data_specification=model.GlobalReference(
             key=(
@@ -359,6 +360,30 @@ def get_pydantic_models_from_instances(
         models.append(pydantic_model)
     return models
 
+def recusrive_model_creation(model_name, dict_values, depth=0):
+    """
+    Function that creates a pydantic model from a dict.
+
+    Args:
+        model_name (_type_): _description_
+        dict_values (_type_): _description_
+
+    Returns:
+        _type_: _description_
+    """
+    for attribute_name, attribute_values in dict_values.items():
+        if isinstance(attribute_values, dict):
+            class_name = convert_under_score_to_camel_case_str(attribute_name)
+            created_model = recusrive_model_creation(class_name, attribute_values, depth=depth+1)
+            dict_values[attribute_name] = created_model(**attribute_values)
+    if depth == 0:
+        base_class = base.AAS
+    elif depth == 1:
+        base_class = base.Submodel
+    else:
+        base_class = base.SubmodelElementCollection
+    return create_model(model_name, **dict_values, __base__=base_class)
+
 
 def get_pydantic_model_from_dict(
     dict_values: dict, model_name: str, all_fields_required: bool = False
@@ -373,7 +398,7 @@ def get_pydantic_model_from_dict(
     Returns:
         Type[BaseModel]: Pydantic model.
     """
-    pydantic_model = create_model(model_name, **dict_values)
+    pydantic_model = recusrive_model_creation(model_name, dict_values)
     pydantic_model = set_example_values(pydantic_model)
     if all_fields_required:
         for field_name, field in pydantic_model.__fields__.items():
