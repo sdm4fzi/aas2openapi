@@ -74,7 +74,7 @@ example_product = Product(
         bill_of_material_info=BillOfMaterialInfo(
             id_short="BOMInfoP1",
             semantic_id="hahaah",
-            manufacterer="Siemens", typi="1234", 
+            manufacterer="Siemens", product_type="1234", 
         )
     ),
 )
@@ -162,7 +162,7 @@ We can now run the middleware script with python and access it at `http://localh
       "description": "string",
       "semantic_id": "string",
       "manufacterer": "Siemensss",
-      "typi": "motor"
+      "product_type": "motor"
     }
   },
   "process_model": {
