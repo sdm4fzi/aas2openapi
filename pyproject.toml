@@ -18,6 +18,9 @@ ba-syx-submodel-repository-client = {path = "ba-syx-submodel-repository-client"}
 python-dotenv = "^1.0.0"
 strawberry-graphql = {extras = ["debug-server"], version = "^0.199.0"}
 email-validator = "^2.0.0.post2"
+graphene-pydantic = "^0.4.2"
+starlette-graphene3 = "^0.6.0"
+websocket = "^0.2.1"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.4.0" 

@@ -2,6 +2,8 @@ import base64
 import os
 from urllib.parse import urlparse
 
+from fastapi import HTTPException
+
 from aas2openapi.convert.convert_pydantic import (
     remove_empty_lists,
     rename_data_specifications_for_basyx,
@@ -102,3 +104,11 @@ def is_server_online(adress: str):
         return True
     except (socket.timeout, ConnectionRefusedError):
         return False
+
+
+async def check_aas_and_sm_server_online():
+    AAS_SERVER, SUBMODEL_SERVER = load_aas_and_submodel_repository_adress()
+    if not is_server_online(AAS_SERVER):
+        raise HTTPException(status_code=503, detail=f"Eror 503: AAS Server cannot be reached at adress {AAS_SERVER}")
+    if not is_server_online(SUBMODEL_SERVER):
+        raise HTTPException(status_code=503, detail=f"Eror 503: Submodel Server cannot be reached at adress {SUBMODEL_SERVER}")

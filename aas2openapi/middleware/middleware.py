@@ -118,5 +118,7 @@ class Middleware:
         """
         Generates a GraphQL API with query operations for aas' and submodels from the loaded models.
         """
-        router = generate_graphql_endpoint(self.models)
-        self.app.include_router(router)
+        graphql_app = generate_graphql_endpoint(self.models)
+        self.app.mount("/graphql", graphql_app)
+
+

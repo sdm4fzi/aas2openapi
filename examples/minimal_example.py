@@ -32,12 +32,14 @@ example_product = Product(
         semantic_id="hunder",
     ),
     bill_of_material=BillOfMaterial(
-        id_="BOMP1", components=["stator", "rotor", "coil", "bearing"],
+        id_="BOMP1", 
+        components=["stator", "rotor", "coil", "bearing"],
         semantic_id="hund",
         bill_of_material_info=BillOfMaterialInfo(
             id_short="BOMInfoP1",
             semantic_id="hahaah",
-            manufacterer="Siemens", typi="1234", 
+            manufacterer="Siemens", 
+            product_type="1234", 
         )
     ),
 )
@@ -61,7 +63,7 @@ middleware.load_pydantic_model_instances([example_product])
 # middleware.load_aas_objectstore(obj_store)
 # middleware.load_json_models(file_path="examples/example_json_model.json")
 middleware.generate_rest_api()
-# middleware.generate_graphql_api()
+middleware.generate_graphql_api()
 
 app = middleware.app
 

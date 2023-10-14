@@ -8,7 +8,7 @@ from pydantic import BaseModel
 
 import aas2openapi
 from aas2openapi.client.submodel_client import get_all_basyx_submodels_from_server, post_submodel_to_server, put_submodel_to_server, submodel_is_on_server
-from aas2openapi.convert.convert_pydantic import ClientModel, get_vars
+from aas2openapi.convert.convert_pydantic import ClientModel
 from aas2openapi.models import base
 from aas2openapi.util import client_utils, convert_util
 
@@ -16,6 +16,8 @@ from aas2openapi.util import client_utils, convert_util
 from ba_syx_aas_repository_client import Client as AASClient
 from ba_syx_aas_repository_client.api.asset_administration_shell_repository_api import delete_asset_administration_shell_by_id, get_all_asset_administration_shells, get_asset_administration_shell_by_id, post_asset_administration_shell, put_asset_administration_shell_by_id
 from fastapi import HTTPException
+
+from aas2openapi.util.convert_util import get_vars
 
 
 AAS_SERVER_ADRESS, SUBMODEL_SERVER_ADRESS = client_utils.load_aas_and_submodel_repository_adress()

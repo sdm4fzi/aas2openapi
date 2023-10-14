@@ -11,17 +11,7 @@ from pydantic import BaseModel, Field
 from aas2openapi.util import convert_util
 
 from aas2openapi.models import base
-
-
-def get_vars(obj: object) -> dict:
-    vars_dict = vars(obj)
-    vars_dict = {key: value for key, value in vars_dict.items() if key[0] != "_"}
-    vars_dict = {key: value for key, value in vars_dict.items() if value is not None}
-    vars_dict = {key: value for key, value in vars_dict.items() if key != "id_"}
-    vars_dict = {key: value for key, value in vars_dict.items() if key != "description"}
-    vars_dict = {key: value for key, value in vars_dict.items() if key != "id_short"}
-    vars_dict = {key: value for key, value in vars_dict.items() if key != "semantic_id"}
-    return vars_dict
+from aas2openapi.util.convert_util import get_vars
 
 
 def convert_pydantic_model_to_aas(

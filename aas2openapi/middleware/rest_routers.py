@@ -18,18 +18,8 @@ from aas2openapi.client.submodel_client import (
     delete_submodel_from_server,
 )
 from aas2openapi.models import base
+from aas2openapi.util.client_utils import check_aas_and_sm_server_online
 from aas2openapi.util.convert_util import get_all_submodels_from_model
-from aas2openapi.util.client_utils import is_server_online, load_aas_and_submodel_repository_adress
-
-async def check_aas_and_sm_server_online():
-    AAS_SERVER, SUBMODEL_SERVER = load_aas_and_submodel_repository_adress()
-    if not is_server_online(AAS_SERVER):
-        raise HTTPException(status_code=503, detail=f"Eror 503: AAS Server cannot be reached at adress {AAS_SERVER}")
-    if not is_server_online(SUBMODEL_SERVER):
-        raise HTTPException(status_code=503, detail=f"Eror 503: Submodel Server cannot be reached at adress {SUBMODEL_SERVER}")
-
-
-
 
 def is_optional_field(field: ModelField):
     return field.required is False
