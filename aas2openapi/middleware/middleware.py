@@ -113,6 +113,7 @@ class Middleware:
         """
         router = generate_model_api(middleware_instance=self)
         self.app.include_router(router)
+        # TODO: make sure, that the API is always at the top or maybe make it as standard component of the middleware...
 
     def generate_rest_api(self):
         """
