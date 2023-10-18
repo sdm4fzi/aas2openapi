@@ -19,12 +19,38 @@ from aas2openapi.client.submodel_client import (
 )
 from aas2openapi.models import base
 from aas2openapi.util.client_utils import check_aas_and_sm_server_online
-from aas2openapi.util.convert_util import get_all_submodels_from_model
+from aas2openapi.util.convert_util import (
+    get_all_submodels_from_model,
+    convert_camel_case_to_underscrore_str,
+)
+
 
 def is_optional_field(field: ModelField):
     return field.required is False
 
-def check_if_submodel_is_optional_in_aas(aas: Type[base.AAS], submodel: Type[base.Submodel]) -> bool:
+
+async def update_aas_on_server(
+    aas_id: str,
+    aas_model: Type[base.AAS],
+    submodel_class_name: str,
+    submodel_model: Type[base.Submodel] = None,
+):
+    data_retrieved = await get_aas_from_server(aas_id)
+    model_instance_data = data_retrieved.dict()
+    submodel_instance_name = convert_camel_case_to_underscrore_str(submodel_class_name)
+
+    if submodel_model:
+        model_instance_data[submodel_instance_name] = submodel_model
+    elif submodel_instance_name in model_instance_data:
+        del model_instance_data[submodel_instance_name]
+    new_model_instance = aas_model(**model_instance_data)
+
+    await put_aas_to_server(new_model_instance)
+
+
+def check_if_submodel_is_optional_in_aas(
+    aas: Type[base.AAS], submodel: Type[base.Submodel]
+) -> bool:
     """
     Checks if a submodel is an optional attribute in an aas.
 
@@ -39,12 +65,15 @@ def check_if_submodel_is_optional_in_aas(aas: Type[base.AAS], submodel: Type[bas
         bool: True if the submodel is an optional attribute in the aas, False otherwise.
     """
     for field_name, field in aas.__fields__.items():
-        if field.type_.__name__ ==  submodel.__name__:
+        if field.type_.__name__ == submodel.__name__:
             if is_optional_field(field):
                 return True
             else:
                 return False
-    raise ValueError(f"Submodel {submodel.__name__} is not a submodel of {aas.__name__}.")
+    raise ValueError(
+        f"Submodel {submodel.__name__} is not a submodel of {aas.__name__}."
+    )
+
 
 def generate_submodel_endpoints_from_model(
     pydantic_model: Type[BaseModel], submodel: Type[base.Submodel]
@@ -74,39 +103,60 @@ def generate_submodel_endpoints_from_model(
     )
     async def get_item(item_id: str):
         await check_aas_and_sm_server_online()
-        return await get_submodel_from_aas_id_and_class_name(item_id, submodel_name)
+        try:
+            return await get_submodel_from_aas_id_and_class_name(item_id, submodel_name)
+        except:
+            raise HTTPException(
+                status_code=411,
+                detail=f"Submodel {submodel_name} does not exist for aas with id {item_id}.",
+            )
 
     if optional_submodel:
-        @router.post(
-            "/",
-            response_model=submodel,
-        )
+
+        @router.post("/")
         async def post_item(item_id: str, item: submodel) -> Dict[str, str]:
             await check_aas_and_sm_server_online()
             try:
                 await get_submodel_from_aas_id_and_class_name(item_id, submodel_name)
-                raise HTTPException(f"Submodel already exists for aas with id {item_id}. Use PUT method to update the submodel.")
+                raise HTTPException(
+                    status_code=413,
+                    detail=f"Submodel already exists for aas with id {item_id}. Use PUT method to update the submodel.",
+                )
             except HTTPException as e:
-                if e.status_code == 400:
+                if e.status_code == 411:
                     await post_submodel_to_server(item)
-                    return {"message": f"Succesfully created submodel {submodel_name} of aas with id {item_id}"}
+                    await update_aas_on_server(
+                        item_id, pydantic_model, submodel_name, item
+                    )
+                    return {
+                        "message": f"Succesfully created submodel {submodel_name} of aas with id {item_id}"
+                    }
                 else:
                     raise e
-    
+
     @router.put("/")
     async def put_item(item_id: str, item: submodel) -> Dict[str, str]:
         await check_aas_and_sm_server_online()
         submodel = await get_submodel_from_aas_id_and_class_name(item_id, submodel_name)
         await put_submodel_to_server(item)
-        return {"message": f"Succesfully updated submodel {submodel_name} of aas with id {item_id}"}
+        await update_aas_on_server(item_id, pydantic_model, submodel_name, item)
+        return {
+            "message": f"Succesfully updated submodel {submodel_name} of aas with id {item_id}"
+        }
 
     if optional_submodel:
+
         @router.delete("/")
         async def delete_item(item_id: str):
             await check_aas_and_sm_server_online()
-            submodel = await get_submodel_from_aas_id_and_class_name(item_id, submodel_name)
+            submodel = await get_submodel_from_aas_id_and_class_name(
+                item_id, submodel_name
+            )
+            await update_aas_on_server(item_id, pydantic_model, submodel_name)
             await delete_submodel_from_server(submodel.id_)
-            return {"message": f"Succesfully deleted submodel {submodel_name} of aas with id {item_id}"}
+            return {
+                "message": f"Succesfully deleted submodel {submodel_name} of aas with id {item_id}"
+            }
 
     return router
 
@@ -157,7 +207,6 @@ def generate_aas_endpoints_from_model(pydantic_model: Type[BaseModel]) -> APIRou
         await delete_aas_from_server(item_id)
         return {"message": f"Succesfully deleted aas with id {item_id}"}
 
-
     return router
 
 
@@ -178,5 +227,3 @@ def generate_endpoints_from_model(pydantic_model: Type[BaseModel]) -> List[APIRo
         routers.append(generate_submodel_endpoints_from_model(pydantic_model, submodel))
 
     return routers
-
-

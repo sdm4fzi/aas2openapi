@@ -102,7 +102,7 @@ async def put_submodel_to_server(submodel: base.Submodel):
     client = SMClient(SUBMODEL_SERVER_ADRESS)
     base_64_id = client_utils.get_base64_from_string(submodel.id_)
     response = await put_submodel_by_id.asyncio(
-        submodel_identifier=base_64_id, client=client, json_body=submodel
+        submodel_identifier=base_64_id, client=client, json_body=submodel_for_client
     )
 
 
@@ -151,7 +151,7 @@ async def get_submodel_from_aas_id_and_class_name(aas_id: str, class_name: str) 
         if submodel.__class__.__name__ == class_name:
             return submodel
     raise HTTPException(
-        status_code=400,
+        status_code=411,
         detail=f"Submodel with name {class_name} does not exist for AAS with id {aas_id}",
     )
 
@@ -164,6 +164,4 @@ async def delete_submodel_from_server(submodel_id: str):
     """
     client = SMClient(SUBMODEL_SERVER_ADRESS)
     base_64_id = client_utils.get_base64_from_string(submodel_id)
-    await asyncio.run(
-        delete_submodel_by_id.asyncio(client=client, submodel_identifier=base_64_id)
-    )
+    await delete_submodel_by_id.asyncio(client=client, submodel_identifier=base_64_id)

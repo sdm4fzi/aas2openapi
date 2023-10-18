@@ -29,17 +29,17 @@ example_product = Product(
     process_model=ProcessModel(
         id_="PMP1",
         processes=["join", "screw"],
-        semantic_id="hunder",
+        semantic_id="PMP1_semantic_id",
     ),
     bill_of_material=BillOfMaterial(
         id_="BOMP1", 
         components=["stator", "rotor", "coil", "bearing"],
-        semantic_id="hund",
+        semantic_id="BOMP1_semantic_id",
         bill_of_material_info=BillOfMaterialInfo(
             id_short="BOMInfoP1",
-            semantic_id="hahaah",
-            manufacterer="Siemens", 
-            product_type="1234", 
+            semantic_id="BOMInfoP1_semantic_id",
+            manufacterer="Bosch", 
+            product_type="A542", 
         )
     ),
 )
@@ -62,9 +62,9 @@ middleware = Middleware()
 middleware.load_pydantic_model_instances([example_product])
 # middleware.load_aas_objectstore(obj_store)
 # middleware.load_json_models(file_path="examples/example_json_model.json")
+middleware.generate_model_registry_api()
 middleware.generate_rest_api()
 middleware.generate_graphql_api()
-middleware.generate_model_registry_api()
 
 app = middleware.app
 

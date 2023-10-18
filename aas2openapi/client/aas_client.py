@@ -98,9 +98,15 @@ async def put_aas_to_server(aas: base.AAS):
         aas_identifier=base_64_id, client=client, json_body=aas_for_client
     )
 
-    submodels = convert_util.get_all_submodels_from_object_store(obj_store)
-    for submodel in submodels:
-        put_submodel_to_server(submodel)
+    aas_attributes = get_vars(aas)
+    for submodel in aas_attributes.values():
+        if await submodel_is_on_server(submodel.id_):
+            await put_submodel_to_server(submodel)
+        else:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Submodel with id {submodel.id_} does not exist. Use POST method to create the submodel.",
+            )
 
 
 async def get_basyx_aas_from_server(aas_id: str) -> model.AssetAdministrationShell:
