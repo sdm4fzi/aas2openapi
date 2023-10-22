@@ -62,9 +62,10 @@ middleware = Middleware()
 middleware.load_pydantic_model_instances([example_product])
 # middleware.load_aas_objectstore(obj_store)
 # middleware.load_json_models(file_path="examples/example_json_model.json")
-middleware.generate_model_registry_api()
 middleware.generate_rest_api()
 middleware.generate_graphql_api()
+
+middleware.generate_model_registry_api()
 
 app = middleware.app
 
