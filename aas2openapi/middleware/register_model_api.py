@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, List
 
 if TYPE_CHECKING:
     from aas2openapi.middleware.middleware import Middleware
@@ -59,6 +59,28 @@ def update_openapi(app: FastAPI):
                 tags=app.openapi_tags,
                 servers=app.servers,
             )
+    
+
+def register_model_from_middleware(model_name: str, model: dict, middleware_instance: Middleware):
+    middleware_instance.load_json_models(json_models={model_name: model}, all_fields_required=True)
+    routers = generate_endpoints_from_model(middleware_instance.models[-1])
+    for router in routers:
+        middleware_instance.app.include_router(router)
+    update_openapi(middleware_instance.app)
+    remove_graphql_api(middleware_instance.app)
+    middleware_instance.generate_graphql_api()
+
+def delete_model_from_middleware(model_name: str, middleware_instance: Middleware):
+    new_models = []
+
+    for model in middleware_instance.models:
+        if not model.__name__ == model_name:
+            new_models.append(model)
+    middleware_instance.models = new_models
+
+    remove_model_routes_from_app(middleware_instance.app, model_name)
+    remove_graphql_api(middleware_instance.app)
+    middleware_instance.generate_graphql_api()
 
 
 def generate_model_api(middleware_instance: Middleware) -> APIRouter:
@@ -68,7 +90,6 @@ def generate_model_api(middleware_instance: Middleware) -> APIRouter:
     Returns:
         APIRouter: FastAPI router with endpoints to register and register models.
     """
-    # TODO: maybe add a get and update request for existing models. maybe extend the path with name of the model (or not) 
     # TODO: Also allow to retrieve and post models as JSONSchema -> with required / non-required fields.
     router = APIRouter(
         prefix=f"",
@@ -76,44 +97,45 @@ def generate_model_api(middleware_instance: Middleware) -> APIRouter:
         responses={404: {"description": "Not found"}},
     )
 
+    @router.get("/get_models",
+                response_model=list)
+    async def get_models() -> List[Dict[str, str]]:
+        return [model.schema() for model in middleware_instance.models]
+
     @router.post(
         "/register_model",
         response_model=dict,
     )
     async def post_model(model_name: str, model: dict) -> Dict[str, str]:
         if any(model_name == model_instance.__name__ for model_instance in middleware_instance.models):
-            raise HTTPException(403, f"A model with the name {model_name} exists already!")
+            raise HTTPException(403, f"A model with the name {model_name} exists already! Please update the existing model.")
         if not "id_" in model.keys():
             raise HTTPException(403, f"Mandatory field id_ is missing for the model <{model_name}>.")
         for key, value in model.items():
             if isinstance(value, dict) and not "id_" in value.keys():
                 raise HTTPException(403, f"Mandatory field id_ is missing in submodel <{key}> for model <{model_name}>.")
-        middleware_instance.load_json_models(json_models={model_name: model}, all_fields_required=True)
-        routers = generate_endpoints_from_model(middleware_instance.models[-1])
-        for router in routers:
-            middleware_instance.app.include_router(router)
-        update_openapi(middleware_instance.app)
-        remove_graphql_api(middleware_instance.app)
-        middleware_instance.generate_graphql_api()
+        register_model_from_middleware(model_name, model, middleware_instance)
         return {"message": f"Succesfully created API for model {model_name}."}
     
-
+    @router.put("/update_model", response_model=dict)
+    async def update_model(model_name: str, model: dict) -> Dict[str, str]:
+        if not any(model_name == model_instance.__name__ for model_instance in middleware_instance.models):
+            raise HTTPException(403, f"A model with the name {model_name} does not exist yet! Please post a new model.")
+        if not "id_" in model.keys():
+            raise HTTPException(403, f"Mandatory field id_ is missing for the model <{model_name}>.")
+        for key, value in model.items():
+            if isinstance(value, dict) and not "id_" in value.keys():
+                raise HTTPException(403, f"Mandatory field id_ is missing in submodel <{key}> for model <{model_name}>.")
+        delete_model_from_middleware(model_name, middleware_instance)
+        register_model_from_middleware(model_name, model, middleware_instance)
+        return {"message": f"Succesfully updated API for model {model_name}."}
 
 
     @router.delete("/delete_model", response_model=dict)
     async def delete_model(model_name: str):
-        new_models = []
         if not any(model.__name__ == model_name for model in middleware_instance.models):
             raise HTTPException(404, f"No model registered in middleware with name <{model_name}>")
-        for model in middleware_instance.models:
-            if not model.__name__ == model_name:
-                new_models.append(model)
-        middleware_instance.models = new_models
-
-        remove_model_routes_from_app(middleware_instance.app, model_name)
-        remove_graphql_api(middleware_instance.app)
-        middleware_instance.generate_graphql_api()
-
+        delete_model_from_middleware(model_name, middleware_instance)
         return {"message": f"Succesfully deleted API for model {model_name}."}
 
     return router
