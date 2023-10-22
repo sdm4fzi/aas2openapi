@@ -1,3 +1,9 @@
+from __future__ import annotations
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from aas2openapi.middleware.middleware import Middleware
+
 from fastapi import APIRouter, HTTPException, FastAPI
 from fastapi.openapi.utils import get_openapi
 
@@ -55,14 +61,13 @@ def update_openapi(app: FastAPI):
             )
 
 
-def generate_model_api(middleware_instance) -> APIRouter:
+def generate_model_api(middleware_instance: Middleware) -> APIRouter:
     """
     Generates endpoints to register und unregister models from the middleware. 
 
     Returns:
         APIRouter: FastAPI router with endpoints to register and register models.
     """
-    # TODO: make sure, that middleware can be imported for type annotation without cycling import. 
     # TODO: maybe add a get and update request for existing models. maybe extend the path with name of the model (or not) 
     # TODO: Also allow to retrieve and post models as JSONSchema -> with required / non-required fields.
     router = APIRouter(
