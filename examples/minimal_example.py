@@ -64,11 +64,11 @@ middleware.load_pydantic_model_instances([example_product])
 # middleware.load_json_models(file_path="examples/example_json_model.json")
 middleware.generate_rest_api()
 middleware.generate_graphql_api()
-
 middleware.generate_model_registry_api()
 
 app = middleware.app
+#run with: uvicorn examples.minimal_example:app --reload
+if __name__ == "__main__":
+    import uvicorn
 
-import uvicorn
-
-uvicorn.run(app)
+    uvicorn.run(app)

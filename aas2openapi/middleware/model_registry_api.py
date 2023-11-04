@@ -1,5 +1,6 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING, List
+import json
 
 if TYPE_CHECKING:
     from aas2openapi.middleware.middleware import Middleware
@@ -12,9 +13,8 @@ from aas2openapi.middleware.rest_routers import generate_endpoints_from_model
 
 from typing import Dict
 
-def route_matches(route, name):
+def route_belongs_to_model(route: str, name: str) -> bool:
     route_api_key = route.path_format.split("/")[1]
-    print("____", route_api_key, name)
     return route_api_key == name
 
 
@@ -28,7 +28,7 @@ def remove_model_routes_from_app(app: FastAPI, model_name: str):
     """
     indices_to_delete = []
     for i, r in enumerate(app.routes):
-        if route_matches(r, model_name):
+        if route_belongs_to_model(r, model_name):
             indices_to_delete.append(i)
     for index in sorted(indices_to_delete, reverse=True):
         del app.routes[index]
@@ -36,7 +36,7 @@ def remove_model_routes_from_app(app: FastAPI, model_name: str):
 
 def remove_graphql_api(app: FastAPI):
     for i, r in enumerate(app.routes):
-        if route_matches(r, "graphql"):
+        if route_belongs_to_model(r, "graphql"):
             del app.routes[i]
 
 
@@ -82,6 +82,13 @@ def delete_model_from_middleware(model_name: str, middleware_instance: Middlewar
     remove_graphql_api(middleware_instance.app)
     middleware_instance.generate_graphql_api()
 
+def recursive_model_example_string_reformatter(model: dict):
+    for key, value in model.items():
+        if key == "example":
+            model[key] = json.loads(value)
+        elif isinstance(value, dict):
+            recursive_model_example_string_reformatter(value)
+    return model
 
 def generate_model_api(middleware_instance: Middleware) -> APIRouter:
     """
@@ -100,7 +107,8 @@ def generate_model_api(middleware_instance: Middleware) -> APIRouter:
     @router.get("/get_models",
                 response_model=list)
     async def get_models() -> List[Dict[str, str]]:
-        return [model.schema() for model in middleware_instance.models]
+        schemas = [recursive_model_example_string_reformatter(model.schema()) for model in middleware_instance.models]
+        return schemas
 
     @router.post(
         "/register_model",

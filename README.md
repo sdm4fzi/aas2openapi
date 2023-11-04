@@ -1,7 +1,7 @@
 # aas2openapi - Middleware for Asset Administration Shell and openAPI 3.0
 
 ![Build-sucess](https://img.shields.io/badge/build-success-green)
-![Version](https://img.shields.io/badge/version-0.1.8-green)
+![Version](https://img.shields.io/badge/version-0.1.9-green)
 ![PyPI - Python Version](https://img.shields.io/badge/python-3.10|3.11|3.12-blue)
 [![DOI](https://zenodo.org/badge/672818560.svg)](https://zenodo.org/badge/latestdoi/672818560)
 
@@ -18,7 +18,7 @@ pip install git+https://github.com/sdm4fzi/aas2openapi.git@main
 You can also install the package within a [potry](https://python-poetry.org/) project by adding the following line to the pyproject.toml file:
 
 ```bash
-aas2openapi = { git = "ssh://git@github.com/sdm4fzi/aas2openapi.git", tag = "0.1.8" }
+aas2openapi = { git = "ssh://git@github.com/sdm4fzi/aas2openapi.git", tag = "0.1.9" }
 ```
 
 
@@ -111,10 +111,22 @@ middleware.load_pydantic_model_instances([example_product])
 middleware.generate_rest_api()
 
 app = middleware.app
+```
 
-import uvicorn
+We can run this app either from the command line with uvicorn:
 
-uvicorn.run(app)
+```bash
+  uvicorn app:app --reload
+```
+
+Here, it is assumed, that the file you saved is called app.py. If it has a different name, rename the first app. Alternatively, you can also run the app directly with python, by extending the script at the bottom with:
+
+```python
+  if __name__ == "__main__":
+    import uvicorn
+
+    uvicorn.run(app)
+
 ```
 
 Besides loading the data models from instances,  we can also generate it directly from its python type, from a JSON-object or from an AAS. To do so, simply replace the `load_pydantic_model_instances` method with `load_pydantic_models` to load from types or `load_aas_objectstore` to load from an AAS object store or `load_json_models` to load from serialized JSON-objects:

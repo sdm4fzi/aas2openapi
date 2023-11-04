@@ -9,7 +9,7 @@ from basyx.aas import model
 import aas2openapi
 from aas2openapi.middleware.graphql_routers import generate_graphql_endpoint
 from aas2openapi.middleware.rest_routers import generate_endpoints_from_model
-from aas2openapi.middleware.register_model_api import generate_model_api
+from aas2openapi.middleware.model_registry_api import generate_model_api
 from aas2openapi.util.convert_util import set_example_values, get_pydantic_model_from_dict, get_pydantic_models_from_instances
 
 
