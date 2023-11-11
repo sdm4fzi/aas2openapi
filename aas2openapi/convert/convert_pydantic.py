@@ -218,14 +218,16 @@ def create_submodel_element_list(
         submodel_element = create_submodel_element(name, el, True)
         submodel_elements.append(submodel_element)
 
-    if isinstance(submodel_elements[0], model.Property):
+    if submodel_elements and isinstance(submodel_elements[0], model.Property):
         value_type_list_element =type(value[0])
+        type_value_list_element=type(submodel_elements[0])
     else:
         value_type_list_element = None
+        type_value_list_element = None
 
     sml = model.SubmodelElementList(
         id_short=name,
-        type_value_list_element=type(submodel_elements[0]),
+        type_value_list_element=type_value_list_element,
         value_type_list_element=value_type_list_element,
         value=submodel_elements,
         order_relevant=ordered,

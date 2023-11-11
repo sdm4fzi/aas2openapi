@@ -1,4 +1,5 @@
 from aas2openapi.client.aas_client import get_aas_from_server, get_all_aas_from_server
+from aas2openapi.client.submodel_client import get_all_submodels_of_type
 from aas2openapi.util.convert_util import get_vars
 from aas2openapi.models import base
 from aas2openapi.util import convert_util
@@ -32,12 +33,6 @@ def create_graphe_pydantic_output_type_for_model(input_model: Type[BaseModel]) -
     graphene_model = type(input_model.__name__, (PydanticObjectType,), {'Meta': type('Meta', (), {'model': input_model})})
     return graphene_model
 
-# TODO: potentially add query for submodels
-# def create_submodel_query(base_query: graphene.ObjectType, submodel: Type[BaseModel]) -> graphene.ObjectType:
-#     """"
-    
-#     """
-
 def is_typing_list_or_tuple(input_type: typing.Any) -> bool:
     """
     Checks if the given type is a typing.List or typing.Tuple.
@@ -55,12 +50,16 @@ def list_contains_any_submodel_element_collections(input_type: typing.Union[typi
 
 
 def rework_default_list_to_default_factory(model: BaseModel):
-    for field in model.__fields__.values():
+    for names, field in model.__fields__.items():
         if field.default: 
             pass
         if isinstance(field.default, list) or isinstance(field.default, tuple) or isinstance(field.default, set):
-            field.type_ = type(field.default[0])
-            field.outer_type_ = typing.List[type(field.default[0])]
+            if field.default:
+                field.type_ = type(field.default[0])
+                field.outer_type_ = typing.List[type(field.default[0])]
+            else:
+                field.type_ = str
+                field.outer_type_ = typing.List[str]
             field.default = None
             field.field_info = FieldInfo(extra={})
             field.required = True
@@ -102,6 +101,42 @@ def get_base_query_and_mutation_classes() -> typing.Tuple[graphene.ObjectType, g
         pass
     return Query, Mutation
 
+
+def get_aas_resolve_function(model: Type[BaseModel]) -> typing.Callable:
+    """
+    Returns the resolve function for the given pydantic model.
+
+    Args:
+        model (Type[BaseModel]): Pydantic model for which the resolve function should be created.
+
+    Returns:
+        typing.Callable: Resolve function for the given pydantic model.
+    """
+    async def resolve_models(self, info):
+        await check_aas_and_sm_server_online()
+        data_retrieved = await get_all_aas_from_server(model)
+        return data_retrieved
+    resolve_models.__name__ = f"resolve_{model.__name__}"
+    return resolve_models
+
+
+def get_submodel_resolve_function(model: Type[BaseModel]) -> typing.Callable:
+    """
+    Returns the resolve function for the given pydantic model.
+
+    Args:
+        model (Type[BaseModel]): Pydantic model for which the resolve function should be created.
+
+    Returns:
+        typing.Callable: Resolve function for the given pydantic model.
+    """
+    async def resolve_models(self, info):
+        await check_aas_and_sm_server_online()
+        data_retrieved = await get_all_submodels_of_type(model)
+        return data_retrieved
+    resolve_models.__name__ = f"resolve_{model.__name__}"
+    return resolve_models
+
 def generate_graphql_endpoint(models: List[Type[BaseModel]]) -> GraphQLApp:
     """
     Generates a GraphQL endpoint for the given pydantic models.
@@ -114,29 +149,27 @@ def generate_graphql_endpoint(models: List[Type[BaseModel]]) -> GraphQLApp:
     # TODO: also make mutation possible
     for model in models:
         model_name = model.__name__
-        # model_type = create_model(__model_name=model_name, **base.AAS.__annotations__)
-        # FIXME: make it work so that it works with multiple models! Currently the query is overwritten!
         
         submodels = get_all_submodels_from_model(model)
         for submodel in submodels:
             create_graphe_pydantic_output_type_for_submodel_elements(submodel)  
 
         graphene_model = create_graphe_pydantic_output_type_for_model(model)
-        class ModelQuery(query):
-            list_models = graphene.List(graphene_model)
-            # get_model = graphene.ObjectType(graphene_model)
+        
+        class_dict = {
+        f"{model_name}": graphene.List(graphene_model),
+        f"resolve_{model_name}": get_aas_resolve_function(model),
+        }
+        query = dynamic_class = type("Query", (query,), class_dict)
 
-            async def resolve_list_models(self, info):
-                await check_aas_and_sm_server_online()
-                data_retrieved = await get_all_aas_from_server(model)
-                return data_retrieved
-            
-            # async def resolve_get_model(self, id_: str, info):
-            #     await check_aas_and_sm_server_online()
-            #     data_retrieved = await get_aas_from_server(aas_id=id_)
-            #     return data_retrieved
-
-        query = ModelQuery
+        for submodel in submodels:
+            submodel_name = submodel.__name__
+            submodel_graphene_model = create_graphe_pydantic_output_type_for_model(submodel)
+            class_dict = {
+            f"{submodel_name}": graphene.List(submodel_graphene_model),
+            f"resolve_{submodel_name}": get_submodel_resolve_function(submodel),
+            }
+            query = dynamic_class = type("Query", (query,), class_dict) 
    
     schema = graphene.Schema(query=query)
     return GraphQLApp(schema=schema, on_get=make_graphiql_handler())

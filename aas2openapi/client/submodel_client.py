@@ -9,6 +9,7 @@ import aas2openapi
 from aas2openapi.client import aas_client
 from aas2openapi.convert import convert_pydantic
 from aas2openapi.models import base
+from pydantic import BaseModel
 
 from aas2openapi.util import client_utils
 
@@ -119,18 +120,34 @@ async def get_submodel_from_server(submodel_id: str) -> base.Submodel:
     return model_data
 
 
-async def get_all_submodels_from_server() -> List[base.Submodel]:
+async def get_all_submodel_data_from_server() -> List[base.Submodel]:
     """
     Function to get all submodels from the server
     Returns:
         List[base.Submodel]: List of submodels retrieved from the server
     """
     client = SMClient(SUBMODEL_SERVER_ADRESS)
-    submodel_data = asyncio.run(get_all_submodels.asyncio(client=client))
-    model_data = []
-    for submodel in submodel_data:
-        model_data.append(aas2openapi.convert_sm_to_pydantic_model(submodel))
-    return model_data
+    submodel_data = await get_all_submodels.asyncio(client=client)
+    submodel_data = submodel_data["result"]
+    return submodel_data
+
+
+async def get_all_submodels_of_type(model: BaseModel) -> List[base.Submodel]:
+    """
+    Function to get all submodels of a certain type from the server
+    Args:
+        model (BaseModel): Pydantic model of the submodel
+    Returns:
+        List[base.Submodel]: List of submodels retrieved from the server
+    """
+    submodels_data = await get_all_submodel_data_from_server()
+    submodels_of_type = []
+    for submodel_data in submodels_data:
+        basyx_submodel = client_utils.transform_client_to_basyx_model(submodel_data)
+        submodel = aas2openapi.convert_sm_to_pydantic_model(basyx_submodel)
+        if submodel.__class__.__name__ == model.__name__:
+            submodels_of_type.append(submodel)
+    return submodels_of_type
 
 
 async def get_submodel_from_aas_id_and_class_name(aas_id: str, class_name: str) -> base.Submodel:

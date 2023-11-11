@@ -39,7 +39,6 @@ def test_update_submodel(client, example_aas_instance):
     assert response.status_code == 200
     updated_aas = client.get(url=f"/{class_name}/{example_aas_instance.id_}/")
     assert updated_aas.json()["process_model"]["processes"] == ["new_process"]
-    # TODO: check if this makes sense!
     new_process_model.id_ = "new_id"
     response = client.put(url=f"/{class_name}/{example_aas_instance.id_}/ProcessModel", content=data)
     assert response.status_code == 200

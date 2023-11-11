@@ -1,7 +1,7 @@
 # aas2openapi - Middleware for Asset Administration Shell and openAPI 3.0
 
 ![Build-sucess](https://img.shields.io/badge/build-success-green)
-![Version](https://img.shields.io/badge/version-0.1.9-green)
+![Version](https://img.shields.io/badge/version-0.1.10-green)
 ![PyPI - Python Version](https://img.shields.io/badge/python-3.10|3.11|3.12-blue)
 [![DOI](https://zenodo.org/badge/672818560.svg)](https://zenodo.org/badge/latestdoi/672818560)
 
@@ -18,7 +18,7 @@ pip install git+https://github.com/sdm4fzi/aas2openapi.git@main
 You can also install the package within a [potry](https://python-poetry.org/) project by adding the following line to the pyproject.toml file:
 
 ```bash
-aas2openapi = { git = "ssh://git@github.com/sdm4fzi/aas2openapi.git", tag = "0.1.9" }
+aas2openapi = { git = "ssh://git@github.com/sdm4fzi/aas2openapi.git", tag = "0.1.10" }
 ```
 
 
@@ -109,6 +109,8 @@ from aas2openapi.middleware import Middleware
 middleware = Middleware()
 middleware.load_pydantic_model_instances([example_product])
 middleware.generate_rest_api()
+middleware.generate_graphql_api()
+middleware.generate_model_registry_api()
 
 app = middleware.app
 ```
@@ -128,6 +130,8 @@ Here, it is assumed, that the file you saved is called app.py. If it has a diffe
     uvicorn.run(app)
 
 ```
+
+You can access now the documentation of the REST API with swagger at `http://localhost:8000/docs` and the graphql endpoint at  `http://localhost:8000/graphql`. 
 
 Besides loading the data models from instances,  we can also generate it directly from its python type, from a JSON-object or from an AAS. To do so, simply replace the `load_pydantic_model_instances` method with `load_pydantic_models` to load from types or `load_aas_objectstore` to load from an AAS object store or `load_json_models` to load from serialized JSON-objects:
 

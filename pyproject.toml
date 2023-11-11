@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "aas2openapi"
-version = "0.1.9"
+version = "0.1.10"
 description = ""
 authors = ["SebBehrendt"]
 license = "MIT License"

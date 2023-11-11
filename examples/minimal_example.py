@@ -22,6 +22,17 @@ class Product(models.AAS):
     process_model: typing.Optional[ProcessModel]
 
 
+class Capability(models.Submodel):
+    capability: str
+
+    
+
+class Process(models.AAS):
+    capability: typing.Optional[Capability]
+    empty: typing.Optional[typing.List[str]] = []
+    empty_value: typing.Optional[str] = ""
+
+
 # Test the transformation capabilities of aas2openapi
 
 example_product = Product(
@@ -43,6 +54,15 @@ example_product = Product(
         )
     ),
 )
+
+example_process = Process(
+    id_="Process1",
+    capability=Capability(
+        id_="Capability1",
+        capability="screw",
+        semantic_id="Capability1_semantic_id",
+    ),
+)
 obj_store = aas2openapi.convert_pydantic_model_to_aas(example_product)
 
 import basyx.aas.adapter.json.json_serialization
@@ -59,7 +79,7 @@ data_model = aas2openapi.convert_object_store_to_pydantic_models(obj_store)
 middleware = Middleware()
 
 # middleware.load_pydantic_models([Product])
-middleware.load_pydantic_model_instances([example_product])
+middleware.load_pydantic_model_instances([example_product, example_process])
 # middleware.load_aas_objectstore(obj_store)
 # middleware.load_json_models(file_path="examples/example_json_model.json")
 middleware.generate_rest_api()
