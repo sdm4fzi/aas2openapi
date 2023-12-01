@@ -15,7 +15,7 @@ You can install the package using by running the following command in the termin
 pip install git+https://github.com/sdm4fzi/aas2openapi.git@main
 ```
 
-You can also install the package within a [potry](https://python-poetry.org/) project by adding the following line to the pyproject.toml file:
+You can also install the package within a [poetry](https://python-poetry.org/) project by adding the following line to the pyproject.toml file:
 
 ```bash
 aas2openapi = { git = "ssh://git@github.com/sdm4fzi/aas2openapi.git", tag = "0.1.10" }
