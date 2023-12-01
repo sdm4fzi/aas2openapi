@@ -23,14 +23,14 @@ class Product(models.AAS):
 
 
 class Capability(models.Submodel):
-    capability: str
+    capability: str  
+    empty: typing.Optional[typing.List[str]] = []
+    empty_value: typing.Optional[str] = ""
 
     
 
 class Process(models.AAS):
     capability: typing.Optional[Capability]
-    empty: typing.Optional[typing.List[str]] = []
-    empty_value: typing.Optional[str] = ""
 
 
 # Test the transformation capabilities of aas2openapi

@@ -221,9 +221,12 @@ def create_submodel_element_list(
     if submodel_elements and isinstance(submodel_elements[0], model.Property):
         value_type_list_element =type(value[0])
         type_value_list_element=type(submodel_elements[0])
-    else:
+    elif submodel_elements and isinstance(submodel_elements[0], model.Reference | model.SubmodelElementCollection):
+        type_value_list_element=type(submodel_elements[0])
         value_type_list_element = None
-        type_value_list_element = None
+    else:
+        value_type_list_element = str
+        type_value_list_element = model.Property
 
     sml = model.SubmodelElementList(
         id_short=name,
