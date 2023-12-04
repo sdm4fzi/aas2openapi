@@ -10,7 +10,7 @@ aas2openapi is a middleware for Asset Administration Shell (AAS) and openAPI 3.0
 ## Installation
 
 You can install the package using by running the following command in the terminal:
-
+# TODO: add pypi option
 ```bash
 pip install git+https://github.com/sdm4fzi/aas2openapi.git@main
 ```
