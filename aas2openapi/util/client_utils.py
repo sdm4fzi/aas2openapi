@@ -11,7 +11,7 @@ from aas2openapi.convert.convert_pydantic import (
 import basyx.aas.adapter.json
 from basyx.aas import model
 import json
-from typing import Union, Tuple
+from typing import Union, Tuple, Any
 import socket
 from logging.config import dictConfig
 import logging
@@ -71,7 +71,7 @@ def get_base64_from_string(string: str) -> str:
 
 
 def transform_client_to_basyx_model(
-    client_model: dict,
+    client_model: dict | Any,
 ) -> Union[model.AssetAdministrationShell, model.Submodel]:
     """
     Function to transform a client model to a basyx model
@@ -80,6 +80,8 @@ def transform_client_to_basyx_model(
     Returns:
         Union[model.AssetAdministrationShell, model.Submodel]: basyx model from the given client model
     """
+    if not isinstance(client_model, dict):
+        client_model = client_model.to_dict()
     remove_empty_lists(client_model)
     json_model = json.dumps(client_model, indent=4)
     basyx_model = json.loads(json_model, cls=basyx.aas.adapter.json.AASFromJsonDecoder)

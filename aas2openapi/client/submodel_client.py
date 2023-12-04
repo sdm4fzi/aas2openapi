@@ -16,6 +16,7 @@ from aas2openapi.util import client_utils
 
 from ba_syx_submodel_repository_client import Client as SMClient
 from ba_syx_submodel_repository_client.api.submodel_repository_api import delete_submodel_by_id, get_all_submodels, get_submodel_by_id, post_submodel, put_submodel_by_id
+from ba_syx_submodel_repository_client.models.submodel import Submodel as ClientSubmodel
 from basyx.aas import model
 
 
@@ -37,7 +38,7 @@ async def get_basyx_submodel_from_server(submodel_id: str) -> model.Submodel:
     return client_utils.transform_client_to_basyx_model(submodel_data.to_dict())
 
 
-async def get_all_basyx_submodels_from_server(aas: model.AssetAdministrationShell) -> List[model.Submodel]:
+async def get_all_basyx_submodels_from_server(aas: model.AssetAdministrationShell) -> List[ClientSubmodel]:
     """
     Function to get all submodels from an AAS in basyx format
     Args:
@@ -120,7 +121,7 @@ async def get_submodel_from_server(submodel_id: str) -> base.Submodel:
     return model_data
 
 
-async def get_all_submodel_data_from_server() -> List[base.Submodel]:
+async def get_all_submodel_data_from_server() -> List[ClientSubmodel]:
     """
     Function to get all submodels from the server
     Returns:
@@ -128,7 +129,7 @@ async def get_all_submodel_data_from_server() -> List[base.Submodel]:
     """
     client = SMClient(SUBMODEL_SERVER_ADRESS)
     submodel_data = await get_all_submodels.asyncio(client=client)
-    submodel_data = submodel_data["result"]
+    submodel_data = submodel_data.result
     return submodel_data
 
 

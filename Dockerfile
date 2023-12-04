@@ -1,4 +1,4 @@
-ARG APP_VERSION=0.2.0
+ARG APP_VERSION=0.2.1
 
 FROM python:3.11-slim
 
