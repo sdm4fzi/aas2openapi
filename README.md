@@ -1,8 +1,8 @@
 # aas2openapi - Middleware for Asset Administration Shell and openAPI 3.0
 
 ![Build-sucess](https://img.shields.io/badge/build-success-green)
-![Version](https://img.shields.io/badge/version-0.2.0-green)
-![PyPI - Python Version](https://img.shields.io/badge/python-3.10|3.11|3.12-blue)
+![PyPI](https://img.shields.io/pypi/v/aas2openapi)
+![PyPI - Python Version](https://img.shields.io/pypi/pyversions/aas2openapi)
 [![DOI](https://zenodo.org/badge/672818560.svg)](https://zenodo.org/badge/latestdoi/672818560)
 
 aas2openapi is a middleware for Asset Administration Shell (AAS) and openAPI 3.0. It can be used to transform AAS to openAPI 3.0 objects and vice versa. Moreover, it can be used to generate a CRUD server that allows to access the AAS data via RESTful API with openAPI Specifications.
@@ -10,15 +10,9 @@ aas2openapi is a middleware for Asset Administration Shell (AAS) and openAPI 3.0
 ## Installation
 
 You can install the package using by running the following command in the terminal:
-# TODO: add pypi option
-```bash
-pip install git+https://github.com/sdm4fzi/aas2openapi.git@main
-```
-
-You can also install the package within a [poetry](https://python-poetry.org/) project by adding the following line to the pyproject.toml file:
 
 ```bash
-aas2openapi = { git = "ssh://git@github.com/sdm4fzi/aas2openapi.git", tag = "0.2.0" }
+pip install aas2openapi
 ```
 
 
@@ -66,15 +60,15 @@ example_product = Product(
     process_model=ProcessModel(
         id_="PMP1",
         processes=["join", "screw"],
-        semantic_id="hunder",
+        semantic_id="PMP1_semantic_id",
     ),
     bill_of_material=BillOfMaterial(
         id_="BOMP1", components=["stator", "rotor", "coil", "bearing"],
-        semantic_id="hund",
+        semantic_id="BOMP1_semantic_id",
         bill_of_material_info=BillOfMaterialInfo(
             id_short="BOMInfoP1",
-            semantic_id="hahaah",
-            manufacterer="Siemens", product_type="1234", 
+            semantic_id="BOMInfoP1_semantic_id",
+            manufacterer="Bosch", product_type="A542", 
         )
     ),
 )
@@ -82,7 +76,7 @@ example_product = Product(
 
 ### Transforming the AAS to openAPI
 
-Now, we can use the `aas2openapi` package to transform the object to an AAS and serialize it with basyx to JSON:
+Now, we can use `aas2openapi` to transform the object to an AAS and serialize it with basyx to JSON:
 
 ```python
 import aas2openapi
@@ -155,37 +149,38 @@ docker-compose -f docker-compose-dev.yaml up
 We can now run the middleware script with python and access it at `http://localhost:8000/`. Documentation of the generated Rest API is at `http://localhost:8000/docs` available by a swaggerUI and the openAPI Specification is available at `http://localhost:8000/openapi.json`. You can use the swaggerUI to post some AAS or this exemplary command (with bash console):
     
 ```bash
-    curl -X 'POST' \
-  'http://localhost:8000/Product/' \
+  curl -X 'POST' \
+  'http://127.0.0.1:8000/Product/' \
   -H 'accept: application/json' \
   -H 'Content-Type: application/json' \
   -d '{
-  "id_": "P1",
+  "id_short": "Product1",
   "description": "string",
-  "id_short": "P1",
+  "id_": "Product1",
   "bill_of_material": {
-    "id_": "bomP1",
-    "description": "string",
-    "id_short": "bomP1",
-    "semantic_id": "string",
+    "id_short": "BOMP1",
+    "description": "",
+    "id_": "BOMP1",
+    "semantic_id": "BOMP1_semantic_id",
     "components": [
-      "string1",
-      "string2"
+      "stator",
+      "rotor",
+      "coil",
+      "bearing"
     ],
-    "product_count": 123,
     "bill_of_material_info": {
-      "id_short": "bominfop1",
-      "description": "string",
-      "semantic_id": "string",
-      "manufacterer": "Siemensss",
-      "product_type": "motor"
+      "id_short": "BOMInfoP1",
+      "description": "",
+      "semantic_id": "BOMInfoP1_semantic_id",
+      "manufacterer": "Bosch",
+      "product_type": "A542"
     }
   },
   "process_model": {
-    "id_": "pmp1",
+    "id_short": "PMP1",
     "description": "",
-    "id_short": "pmp1",
-    "semantic_id": null,
+    "id_": "PMP1",
+    "semantic_id": "PMP1_semantic_id",
     "processes": [
       "join",
       "screw"
