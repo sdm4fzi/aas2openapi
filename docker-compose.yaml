@@ -1,13 +1,13 @@
 version: "3.9"
 services:
   aas-repository:
-    image: "eclipsebasyx/aas-repository:2.0.0-SNAPSHOT"
+    image: "eclipsebasyx/aas-repository:2.0.0-SNAPSHOT-NOINDEX"
     ports:
       - "8081:8081"
     networks:
       - backend
   sm-repository:
-    image: "eclipsebasyx/submodel-repository:2.0.0-SNAPSHOT"
+    image: "eclipsebasyx/submodel-repository:2.0.0-SNAPSHOT-NOINDEX"
     ports:
       - "8082:8081"
     networks:

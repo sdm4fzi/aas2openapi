@@ -19,7 +19,7 @@ services:
     #ports:
     #  - 27017:27017
   aas-env:
-    image: eclipsebasyx/aas-environment:2.0.0-SNAPSHOT
+    image: eclipsebasyx/aas-environment:2.0.0-SNAPSHOT-NOINDEX
     volumes:
       - ./aas-env.properties:/application/application.properties
     ports:
