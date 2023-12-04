@@ -18,41 +18,33 @@ class Qualifier:
     """
     Attributes:
         type (Union[Unset, str]):
-        value_type (Union[Unset, QualifierValueType]):
-        kind (Union[Unset, QualifierKind]):
-        value_id (Union[Unset, Reference]):
         value (Union[Unset, str]):
-        semantic_id (Union[Unset, Reference]):
+        kind (Union[Unset, QualifierKind]):
+        value_type (Union[Unset, QualifierValueType]):
         supplemental_semantic_ids (Union[Unset, List['Reference']]):
+        value_id (Union[Unset, Reference]):
+        semantic_id (Union[Unset, Reference]):
     """
 
     type: Union[Unset, str] = UNSET
-    value_type: Union[Unset, QualifierValueType] = UNSET
-    kind: Union[Unset, QualifierKind] = UNSET
-    value_id: Union[Unset, "Reference"] = UNSET
     value: Union[Unset, str] = UNSET
-    semantic_id: Union[Unset, "Reference"] = UNSET
+    kind: Union[Unset, QualifierKind] = UNSET
+    value_type: Union[Unset, QualifierValueType] = UNSET
     supplemental_semantic_ids: Union[Unset, List["Reference"]] = UNSET
+    value_id: Union[Unset, "Reference"] = UNSET
+    semantic_id: Union[Unset, "Reference"] = UNSET
     additional_properties: Dict[str, Any] = attr.ib(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
         type = self.type
-        value_type: Union[Unset, str] = UNSET
-        if not isinstance(self.value_type, Unset):
-            value_type = self.value_type.value
-
+        value = self.value
         kind: Union[Unset, str] = UNSET
         if not isinstance(self.kind, Unset):
             kind = self.kind.value
 
-        value_id: Union[Unset, Dict[str, Any]] = UNSET
-        if not isinstance(self.value_id, Unset):
-            value_id = self.value_id.to_dict()
-
-        value = self.value
-        semantic_id: Union[Unset, Dict[str, Any]] = UNSET
-        if not isinstance(self.semantic_id, Unset):
-            semantic_id = self.semantic_id.to_dict()
+        value_type: Union[Unset, str] = UNSET
+        if not isinstance(self.value_type, Unset):
+            value_type = self.value_type.value
 
         supplemental_semantic_ids: Union[Unset, List[Dict[str, Any]]] = UNSET
         if not isinstance(self.supplemental_semantic_ids, Unset):
@@ -62,23 +54,31 @@ class Qualifier:
 
                 supplemental_semantic_ids.append(supplemental_semantic_ids_item)
 
+        value_id: Union[Unset, Dict[str, Any]] = UNSET
+        if not isinstance(self.value_id, Unset):
+            value_id = self.value_id.to_dict()
+
+        semantic_id: Union[Unset, Dict[str, Any]] = UNSET
+        if not isinstance(self.semantic_id, Unset):
+            semantic_id = self.semantic_id.to_dict()
+
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update({})
         if type is not UNSET:
             field_dict["type"] = type
-        if value_type is not UNSET:
-            field_dict["valueType"] = value_type
-        if kind is not UNSET:
-            field_dict["kind"] = kind
-        if value_id is not UNSET:
-            field_dict["valueID"] = value_id
         if value is not UNSET:
             field_dict["value"] = value
-        if semantic_id is not UNSET:
-            field_dict["semanticID"] = semantic_id
+        if kind is not UNSET:
+            field_dict["kind"] = kind
+        if value_type is not UNSET:
+            field_dict["valueType"] = value_type
         if supplemental_semantic_ids is not UNSET:
             field_dict["supplementalSemanticIds"] = supplemental_semantic_ids
+        if value_id is not UNSET:
+            field_dict["valueId"] = value_id
+        if semantic_id is not UNSET:
+            field_dict["semanticId"] = semantic_id
 
         return field_dict
 
@@ -89,12 +89,7 @@ class Qualifier:
         d = src_dict.copy()
         type = d.pop("type", UNSET)
 
-        _value_type = d.pop("valueType", UNSET)
-        value_type: Union[Unset, QualifierValueType]
-        if isinstance(_value_type, Unset):
-            value_type = UNSET
-        else:
-            value_type = QualifierValueType(_value_type)
+        value = d.pop("value", UNSET)
 
         _kind = d.pop("kind", UNSET)
         kind: Union[Unset, QualifierKind]
@@ -103,21 +98,12 @@ class Qualifier:
         else:
             kind = QualifierKind(_kind)
 
-        _value_id = d.pop("valueID", UNSET)
-        value_id: Union[Unset, Reference]
-        if isinstance(_value_id, Unset):
-            value_id = UNSET
+        _value_type = d.pop("valueType", UNSET)
+        value_type: Union[Unset, QualifierValueType]
+        if isinstance(_value_type, Unset):
+            value_type = UNSET
         else:
-            value_id = Reference.from_dict(_value_id)
-
-        value = d.pop("value", UNSET)
-
-        _semantic_id = d.pop("semanticID", UNSET)
-        semantic_id: Union[Unset, Reference]
-        if isinstance(_semantic_id, Unset):
-            semantic_id = UNSET
-        else:
-            semantic_id = Reference.from_dict(_semantic_id)
+            value_type = QualifierValueType(_value_type)
 
         supplemental_semantic_ids = []
         _supplemental_semantic_ids = d.pop("supplementalSemanticIds", UNSET)
@@ -126,14 +112,28 @@ class Qualifier:
 
             supplemental_semantic_ids.append(supplemental_semantic_ids_item)
 
+        _value_id = d.pop("valueId", UNSET)
+        value_id: Union[Unset, Reference]
+        if isinstance(_value_id, Unset):
+            value_id = UNSET
+        else:
+            value_id = Reference.from_dict(_value_id)
+
+        _semantic_id = d.pop("semanticId", UNSET)
+        semantic_id: Union[Unset, Reference]
+        if isinstance(_semantic_id, Unset):
+            semantic_id = UNSET
+        else:
+            semantic_id = Reference.from_dict(_semantic_id)
+
         qualifier = cls(
             type=type,
-            value_type=value_type,
-            kind=kind,
-            value_id=value_id,
             value=value,
-            semantic_id=semantic_id,
+            kind=kind,
+            value_type=value_type,
             supplemental_semantic_ids=supplemental_semantic_ids,
+            value_id=value_id,
+            semantic_id=semantic_id,
         )
 
         qualifier.additional_properties = d

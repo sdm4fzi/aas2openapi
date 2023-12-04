@@ -5,8 +5,13 @@ import httpx
 
 from ... import errors
 from ...client import Client
+from ...models.entity import Entity
+from ...models.operation import Operation
+from ...models.relationship_element import RelationshipElement
 from ...models.result import Result
 from ...models.submodel_element import SubmodelElement
+from ...models.submodel_element_collection import SubmodelElementCollection
+from ...models.submodel_element_list import SubmodelElementList
 from ...types import Response
 
 
@@ -14,7 +19,14 @@ def _get_kwargs(
     submodel_identifier: str,
     *,
     client: Client,
-    json_body: SubmodelElement,
+    json_body: Union[
+        "Entity",
+        "Operation",
+        "RelationshipElement",
+        "SubmodelElement",
+        "SubmodelElementCollection",
+        "SubmodelElementList",
+    ],
 ) -> Dict[str, Any]:
     url = "{}/submodels/{submodelIdentifier}/submodel-elements".format(
         client.base_url, submodelIdentifier=submodel_identifier
@@ -23,7 +35,31 @@ def _get_kwargs(
     headers: Dict[str, str] = client.get_headers()
     cookies: Dict[str, Any] = client.get_cookies()
 
-    json_json_body = json_body.to_dict()
+    json_json_body: Dict[str, Any]
+
+    if isinstance(json_body, SubmodelElement):
+        json_json_body = json_body.to_dict()
+
+    elif isinstance(json_body, SubmodelElement):
+        json_json_body = json_body.to_dict()
+
+    elif isinstance(json_body, Entity):
+        json_json_body = json_body.to_dict()
+
+    elif isinstance(json_body, SubmodelElement):
+        json_json_body = json_body.to_dict()
+
+    elif isinstance(json_body, Operation):
+        json_json_body = json_body.to_dict()
+
+    elif isinstance(json_body, RelationshipElement):
+        json_json_body = json_body.to_dict()
+
+    elif isinstance(json_body, SubmodelElementCollection):
+        json_json_body = json_body.to_dict()
+
+    else:
+        json_json_body = json_body.to_dict()
 
     return {
         "method": "post",
@@ -37,30 +73,18 @@ def _get_kwargs(
 
 
 def _parse_response(*, client: Client, response: httpx.Response) -> Optional[Union[Result, SubmodelElement]]:
-    if response.status_code == HTTPStatus.BAD_REQUEST:
-        response_400 = Result.from_dict(response.json())
-
-        return response_400
-    if response.status_code == HTTPStatus.INTERNAL_SERVER_ERROR:
-        response_500 = Result.from_dict(response.json())
-
-        return response_500
-    if response.status_code == HTTPStatus.OK:
-        response_200 = Result.from_dict(response.json())
-
-        return response_200
-    if response.status_code == HTTPStatus.UNAUTHORIZED:
-        response_401 = Result.from_dict(response.json())
-
-        return response_401
-    if response.status_code == HTTPStatus.CONFLICT:
-        response_409 = Result.from_dict(response.json())
-
-        return response_409
     if response.status_code == HTTPStatus.CREATED:
         response_201 = SubmodelElement.from_dict(response.json())
 
         return response_201
+    if response.status_code == HTTPStatus.CONFLICT:
+        response_409 = Result.from_dict(response.json())
+
+        return response_409
+    if response.status_code == HTTPStatus.UNAUTHORIZED:
+        response_401 = Result.from_dict(response.json())
+
+        return response_401
     if response.status_code == HTTPStatus.FORBIDDEN:
         response_403 = Result.from_dict(response.json())
 
@@ -69,6 +93,18 @@ def _parse_response(*, client: Client, response: httpx.Response) -> Optional[Uni
         response_404 = Result.from_dict(response.json())
 
         return response_404
+    if response.status_code == HTTPStatus.OK:
+        response_200 = Result.from_dict(response.json())
+
+        return response_200
+    if response.status_code == HTTPStatus.BAD_REQUEST:
+        response_400 = Result.from_dict(response.json())
+
+        return response_400
+    if response.status_code == HTTPStatus.INTERNAL_SERVER_ERROR:
+        response_500 = Result.from_dict(response.json())
+
+        return response_500
     if client.raise_on_unexpected_status:
         raise errors.UnexpectedStatus(response.status_code, response.content)
     else:
@@ -88,13 +124,21 @@ def sync_detailed(
     submodel_identifier: str,
     *,
     client: Client,
-    json_body: SubmodelElement,
+    json_body: Union[
+        "Entity",
+        "Operation",
+        "RelationshipElement",
+        "SubmodelElement",
+        "SubmodelElementCollection",
+        "SubmodelElementList",
+    ],
 ) -> Response[Union[Result, SubmodelElement]]:
     """Creates a new submodel element
 
     Args:
         submodel_identifier (str):
-        json_body (SubmodelElement):
+        json_body (Union['Entity', 'Operation', 'RelationshipElement', 'SubmodelElement',
+            'SubmodelElementCollection', 'SubmodelElementList']): Requested submodel element
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -122,13 +166,21 @@ def sync(
     submodel_identifier: str,
     *,
     client: Client,
-    json_body: SubmodelElement,
+    json_body: Union[
+        "Entity",
+        "Operation",
+        "RelationshipElement",
+        "SubmodelElement",
+        "SubmodelElementCollection",
+        "SubmodelElementList",
+    ],
 ) -> Optional[Union[Result, SubmodelElement]]:
     """Creates a new submodel element
 
     Args:
         submodel_identifier (str):
-        json_body (SubmodelElement):
+        json_body (Union['Entity', 'Operation', 'RelationshipElement', 'SubmodelElement',
+            'SubmodelElementCollection', 'SubmodelElementList']): Requested submodel element
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -149,13 +201,21 @@ async def asyncio_detailed(
     submodel_identifier: str,
     *,
     client: Client,
-    json_body: SubmodelElement,
+    json_body: Union[
+        "Entity",
+        "Operation",
+        "RelationshipElement",
+        "SubmodelElement",
+        "SubmodelElementCollection",
+        "SubmodelElementList",
+    ],
 ) -> Response[Union[Result, SubmodelElement]]:
     """Creates a new submodel element
 
     Args:
         submodel_identifier (str):
-        json_body (SubmodelElement):
+        json_body (Union['Entity', 'Operation', 'RelationshipElement', 'SubmodelElement',
+            'SubmodelElementCollection', 'SubmodelElementList']): Requested submodel element
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -181,13 +241,21 @@ async def asyncio(
     submodel_identifier: str,
     *,
     client: Client,
-    json_body: SubmodelElement,
+    json_body: Union[
+        "Entity",
+        "Operation",
+        "RelationshipElement",
+        "SubmodelElement",
+        "SubmodelElementCollection",
+        "SubmodelElementList",
+    ],
 ) -> Optional[Union[Result, SubmodelElement]]:
     """Creates a new submodel element
 
     Args:
         submodel_identifier (str):
-        json_body (SubmodelElement):
+        json_body (Union['Entity', 'Operation', 'RelationshipElement', 'SubmodelElement',
+            'SubmodelElementCollection', 'SubmodelElementList']): Requested submodel element
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.

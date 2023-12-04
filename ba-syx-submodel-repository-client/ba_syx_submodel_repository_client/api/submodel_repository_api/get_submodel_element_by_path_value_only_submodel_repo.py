@@ -12,7 +12,6 @@ from ...models.get_submodel_element_by_path_value_only_submodel_repo_level impor
     GetSubmodelElementByPathValueOnlySubmodelRepoLevel,
 )
 from ...models.result import Result
-from ...models.submodel_element_value import SubmodelElementValue
 from ...types import UNSET, Response, Unset
 
 
@@ -61,23 +60,15 @@ def _get_kwargs(
     }
 
 
-def _parse_response(*, client: Client, response: httpx.Response) -> Optional[Union[Result, SubmodelElementValue]]:
-    if response.status_code == HTTPStatus.BAD_REQUEST:
-        response_400 = Result.from_dict(response.json())
-
-        return response_400
-    if response.status_code == HTTPStatus.INTERNAL_SERVER_ERROR:
-        response_500 = Result.from_dict(response.json())
-
-        return response_500
-    if response.status_code == HTTPStatus.OK:
-        response_200 = SubmodelElementValue.from_dict(response.json())
-
-        return response_200
+def _parse_response(*, client: Client, response: httpx.Response) -> Optional[Result]:
     if response.status_code == HTTPStatus.UNAUTHORIZED:
         response_401 = Result.from_dict(response.json())
 
         return response_401
+    if response.status_code == HTTPStatus.OK:
+        response_200 = Result.from_dict(response.json())
+
+        return response_200
     if response.status_code == HTTPStatus.FORBIDDEN:
         response_403 = Result.from_dict(response.json())
 
@@ -86,13 +77,21 @@ def _parse_response(*, client: Client, response: httpx.Response) -> Optional[Uni
         response_404 = Result.from_dict(response.json())
 
         return response_404
+    if response.status_code == HTTPStatus.BAD_REQUEST:
+        response_400 = Result.from_dict(response.json())
+
+        return response_400
+    if response.status_code == HTTPStatus.INTERNAL_SERVER_ERROR:
+        response_500 = Result.from_dict(response.json())
+
+        return response_500
     if client.raise_on_unexpected_status:
         raise errors.UnexpectedStatus(response.status_code, response.content)
     else:
         return None
 
 
-def _build_response(*, client: Client, response: httpx.Response) -> Response[Union[Result, SubmodelElementValue]]:
+def _build_response(*, client: Client, response: httpx.Response) -> Response[Result]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -112,7 +111,7 @@ def sync_detailed(
     extent: Union[
         Unset, None, GetSubmodelElementByPathValueOnlySubmodelRepoExtent
     ] = GetSubmodelElementByPathValueOnlySubmodelRepoExtent.WITHOUTBLOBVALUE,
-) -> Response[Union[Result, SubmodelElementValue]]:
+) -> Response[Result]:
     """Returns a specific submodel element from the Submodel at a specified path in the ValueOnly
     representation
 
@@ -129,7 +128,7 @@ def sync_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Result, SubmodelElementValue]]
+        Response[Result]
     """
 
     kwargs = _get_kwargs(
@@ -159,7 +158,7 @@ def sync(
     extent: Union[
         Unset, None, GetSubmodelElementByPathValueOnlySubmodelRepoExtent
     ] = GetSubmodelElementByPathValueOnlySubmodelRepoExtent.WITHOUTBLOBVALUE,
-) -> Optional[Union[Result, SubmodelElementValue]]:
+) -> Optional[Result]:
     """Returns a specific submodel element from the Submodel at a specified path in the ValueOnly
     representation
 
@@ -176,7 +175,7 @@ def sync(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Result, SubmodelElementValue]
+        Result
     """
 
     return sync_detailed(
@@ -199,7 +198,7 @@ async def asyncio_detailed(
     extent: Union[
         Unset, None, GetSubmodelElementByPathValueOnlySubmodelRepoExtent
     ] = GetSubmodelElementByPathValueOnlySubmodelRepoExtent.WITHOUTBLOBVALUE,
-) -> Response[Union[Result, SubmodelElementValue]]:
+) -> Response[Result]:
     """Returns a specific submodel element from the Submodel at a specified path in the ValueOnly
     representation
 
@@ -216,7 +215,7 @@ async def asyncio_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Result, SubmodelElementValue]]
+        Response[Result]
     """
 
     kwargs = _get_kwargs(
@@ -244,7 +243,7 @@ async def asyncio(
     extent: Union[
         Unset, None, GetSubmodelElementByPathValueOnlySubmodelRepoExtent
     ] = GetSubmodelElementByPathValueOnlySubmodelRepoExtent.WITHOUTBLOBVALUE,
-) -> Optional[Union[Result, SubmodelElementValue]]:
+) -> Optional[Result]:
     """Returns a specific submodel element from the Submodel at a specified path in the ValueOnly
     representation
 
@@ -261,7 +260,7 @@ async def asyncio(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Result, SubmodelElementValue]
+        Result
     """
 
     return (

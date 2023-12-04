@@ -12,34 +12,35 @@ T = TypeVar("T", bound="Key")
 class Key:
     """
     Attributes:
-        type (Union[Unset, KeyType]):
         value (Union[Unset, str]):
+        type (Union[Unset, KeyType]):
     """
 
-    type: Union[Unset, KeyType] = UNSET
     value: Union[Unset, str] = UNSET
+    type: Union[Unset, KeyType] = UNSET
     additional_properties: Dict[str, Any] = attr.ib(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
+        value = self.value
         type: Union[Unset, str] = UNSET
         if not isinstance(self.type, Unset):
             type = self.type.value
 
-        value = self.value
-
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update({})
-        if type is not UNSET:
-            field_dict["type"] = type
         if value is not UNSET:
             field_dict["value"] = value
+        if type is not UNSET:
+            field_dict["type"] = type
 
         return field_dict
 
     @classmethod
     def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
         d = src_dict.copy()
+        value = d.pop("value", UNSET)
+
         _type = d.pop("type", UNSET)
         type: Union[Unset, KeyType]
         if isinstance(_type, Unset):
@@ -47,11 +48,9 @@ class Key:
         else:
             type = KeyType(_type)
 
-        value = d.pop("value", UNSET)
-
         key = cls(
-            type=type,
             value=value,
+            type=type,
         )
 
         key.additional_properties = d

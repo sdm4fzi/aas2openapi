@@ -56,7 +56,7 @@ class AdministrativeInformation:
         if creator is not UNSET:
             field_dict["creator"] = creator
         if template_id is not UNSET:
-            field_dict["templateID"] = template_id
+            field_dict["templateId"] = template_id
         if embedded_data_specifications is not UNSET:
             field_dict["embeddedDataSpecifications"] = embedded_data_specifications
 
@@ -79,7 +79,7 @@ class AdministrativeInformation:
         else:
             creator = Reference.from_dict(_creator)
 
-        template_id = d.pop("templateID", UNSET)
+        template_id = d.pop("templateId", UNSET)
 
         embedded_data_specifications = []
         _embedded_data_specifications = d.pop("embeddedDataSpecifications", UNSET)

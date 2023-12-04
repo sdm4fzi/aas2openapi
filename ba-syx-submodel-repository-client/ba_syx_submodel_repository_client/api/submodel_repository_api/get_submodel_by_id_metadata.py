@@ -7,7 +7,6 @@ from ... import errors
 from ...client import Client
 from ...models.get_submodel_by_id_metadata_level import GetSubmodelByIdMetadataLevel
 from ...models.result import Result
-from ...models.submodel import Submodel
 from ...types import UNSET, Response, Unset
 
 
@@ -42,17 +41,9 @@ def _get_kwargs(
     }
 
 
-def _parse_response(*, client: Client, response: httpx.Response) -> Optional[Union[Result, Submodel]]:
-    if response.status_code == HTTPStatus.BAD_REQUEST:
-        response_400 = Result.from_dict(response.json())
-
-        return response_400
-    if response.status_code == HTTPStatus.INTERNAL_SERVER_ERROR:
-        response_500 = Result.from_dict(response.json())
-
-        return response_500
+def _parse_response(*, client: Client, response: httpx.Response) -> Optional[Result]:
     if response.status_code == HTTPStatus.OK:
-        response_200 = Submodel.from_dict(response.json())
+        response_200 = Result.from_dict(response.json())
 
         return response_200
     if response.status_code == HTTPStatus.UNAUTHORIZED:
@@ -67,13 +58,21 @@ def _parse_response(*, client: Client, response: httpx.Response) -> Optional[Uni
         response_404 = Result.from_dict(response.json())
 
         return response_404
+    if response.status_code == HTTPStatus.BAD_REQUEST:
+        response_400 = Result.from_dict(response.json())
+
+        return response_400
+    if response.status_code == HTTPStatus.INTERNAL_SERVER_ERROR:
+        response_500 = Result.from_dict(response.json())
+
+        return response_500
     if client.raise_on_unexpected_status:
         raise errors.UnexpectedStatus(response.status_code, response.content)
     else:
         return None
 
 
-def _build_response(*, client: Client, response: httpx.Response) -> Response[Union[Result, Submodel]]:
+def _build_response(*, client: Client, response: httpx.Response) -> Response[Result]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -87,7 +86,7 @@ def sync_detailed(
     *,
     client: Client,
     level: Union[Unset, None, GetSubmodelByIdMetadataLevel] = GetSubmodelByIdMetadataLevel.DEEP,
-) -> Response[Union[Result, Submodel]]:
+) -> Response[Result]:
     """Returns the metadata attributes of a specific Submodel
 
     Args:
@@ -100,7 +99,7 @@ def sync_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Result, Submodel]]
+        Response[Result]
     """
 
     kwargs = _get_kwargs(
@@ -122,7 +121,7 @@ def sync(
     *,
     client: Client,
     level: Union[Unset, None, GetSubmodelByIdMetadataLevel] = GetSubmodelByIdMetadataLevel.DEEP,
-) -> Optional[Union[Result, Submodel]]:
+) -> Optional[Result]:
     """Returns the metadata attributes of a specific Submodel
 
     Args:
@@ -135,7 +134,7 @@ def sync(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Result, Submodel]
+        Result
     """
 
     return sync_detailed(
@@ -150,7 +149,7 @@ async def asyncio_detailed(
     *,
     client: Client,
     level: Union[Unset, None, GetSubmodelByIdMetadataLevel] = GetSubmodelByIdMetadataLevel.DEEP,
-) -> Response[Union[Result, Submodel]]:
+) -> Response[Result]:
     """Returns the metadata attributes of a specific Submodel
 
     Args:
@@ -163,7 +162,7 @@ async def asyncio_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Result, Submodel]]
+        Response[Result]
     """
 
     kwargs = _get_kwargs(
@@ -183,7 +182,7 @@ async def asyncio(
     *,
     client: Client,
     level: Union[Unset, None, GetSubmodelByIdMetadataLevel] = GetSubmodelByIdMetadataLevel.DEEP,
-) -> Optional[Union[Result, Submodel]]:
+) -> Optional[Result]:
     """Returns the metadata attributes of a specific Submodel
 
     Args:
@@ -196,7 +195,7 @@ async def asyncio(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Result, Submodel]
+        Result
     """
 
     return (

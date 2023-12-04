@@ -1,10 +1,11 @@
 from http import HTTPStatus
-from typing import Any, Dict, List, Optional, Union, cast
+from typing import Any, Dict, Optional, Union
 
 import httpx
 
 from ... import errors
 from ...client import Client
+from ...models.base_64_url_encoded_cursor import Base64UrlEncodedCursor
 from ...models.get_all_submodel_references_aas_repository_limit import GetAllSubmodelReferencesAasRepositoryLimit
 from ...models.result import Result
 from ...types import UNSET, Response, Unset
@@ -15,7 +16,7 @@ def _get_kwargs(
     *,
     client: Client,
     limit: Union[Unset, None, GetAllSubmodelReferencesAasRepositoryLimit] = UNSET,
-    cursor: Union[Unset, None, str] = UNSET,
+    cursor: Union[Unset, None, "Base64UrlEncodedCursor"] = UNSET,
 ) -> Dict[str, Any]:
     url = "{}/shells/{aasIdentifier}/submodel-refs".format(client.base_url, aasIdentifier=aas_identifier)
 
@@ -29,7 +30,12 @@ def _get_kwargs(
 
     params["limit"] = json_limit
 
-    params["cursor"] = cursor
+    json_cursor: Union[Unset, None, Dict[str, Any]] = UNSET
+    if not isinstance(cursor, Unset):
+        json_cursor = cursor.to_dict() if cursor else None
+
+    if not isinstance(json_cursor, Unset) and json_cursor is not None:
+        params.update(json_cursor)
 
     params = {k: v for k, v in params.items() if v is not UNSET and v is not None}
 
@@ -44,11 +50,15 @@ def _get_kwargs(
     }
 
 
-def _parse_response(*, client: Client, response: httpx.Response) -> Optional[Union[List[str], Result]]:
-    if response.status_code == HTTPStatus.BAD_REQUEST:
-        response_400 = Result.from_dict(response.json())
+def _parse_response(*, client: Client, response: httpx.Response) -> Optional[Result]:
+    if response.status_code == HTTPStatus.INTERNAL_SERVER_ERROR:
+        response_500 = Result.from_dict(response.json())
 
-        return response_400
+        return response_500
+    if response.status_code == HTTPStatus.OK:
+        response_200 = Result.from_dict(response.json())
+
+        return response_200
     if response.status_code == HTTPStatus.UNAUTHORIZED:
         response_401 = Result.from_dict(response.json())
 
@@ -57,25 +67,21 @@ def _parse_response(*, client: Client, response: httpx.Response) -> Optional[Uni
         response_403 = Result.from_dict(response.json())
 
         return response_403
-    if response.status_code == HTTPStatus.OK:
-        response_200 = cast(List[str], response.json())
-
-        return response_200
     if response.status_code == HTTPStatus.NOT_FOUND:
         response_404 = Result.from_dict(response.json())
 
         return response_404
-    if response.status_code == HTTPStatus.INTERNAL_SERVER_ERROR:
-        response_500 = Result.from_dict(response.json())
+    if response.status_code == HTTPStatus.BAD_REQUEST:
+        response_400 = Result.from_dict(response.json())
 
-        return response_500
+        return response_400
     if client.raise_on_unexpected_status:
         raise errors.UnexpectedStatus(response.status_code, response.content)
     else:
         return None
 
 
-def _build_response(*, client: Client, response: httpx.Response) -> Response[Union[List[str], Result]]:
+def _build_response(*, client: Client, response: httpx.Response) -> Response[Result]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -89,21 +95,21 @@ def sync_detailed(
     *,
     client: Client,
     limit: Union[Unset, None, GetAllSubmodelReferencesAasRepositoryLimit] = UNSET,
-    cursor: Union[Unset, None, str] = UNSET,
-) -> Response[Union[List[str], Result]]:
+    cursor: Union[Unset, None, "Base64UrlEncodedCursor"] = UNSET,
+) -> Response[Result]:
     """Returns all submodel references
 
     Args:
         aas_identifier (str):
         limit (Union[Unset, None, GetAllSubmodelReferencesAasRepositoryLimit]):
-        cursor (Union[Unset, None, str]):
+        cursor (Union[Unset, None, Base64UrlEncodedCursor]):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[List[str], Result]]
+        Response[Result]
     """
 
     kwargs = _get_kwargs(
@@ -126,21 +132,21 @@ def sync(
     *,
     client: Client,
     limit: Union[Unset, None, GetAllSubmodelReferencesAasRepositoryLimit] = UNSET,
-    cursor: Union[Unset, None, str] = UNSET,
-) -> Optional[Union[List[str], Result]]:
+    cursor: Union[Unset, None, "Base64UrlEncodedCursor"] = UNSET,
+) -> Optional[Result]:
     """Returns all submodel references
 
     Args:
         aas_identifier (str):
         limit (Union[Unset, None, GetAllSubmodelReferencesAasRepositoryLimit]):
-        cursor (Union[Unset, None, str]):
+        cursor (Union[Unset, None, Base64UrlEncodedCursor]):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[List[str], Result]
+        Result
     """
 
     return sync_detailed(
@@ -156,21 +162,21 @@ async def asyncio_detailed(
     *,
     client: Client,
     limit: Union[Unset, None, GetAllSubmodelReferencesAasRepositoryLimit] = UNSET,
-    cursor: Union[Unset, None, str] = UNSET,
-) -> Response[Union[List[str], Result]]:
+    cursor: Union[Unset, None, "Base64UrlEncodedCursor"] = UNSET,
+) -> Response[Result]:
     """Returns all submodel references
 
     Args:
         aas_identifier (str):
         limit (Union[Unset, None, GetAllSubmodelReferencesAasRepositoryLimit]):
-        cursor (Union[Unset, None, str]):
+        cursor (Union[Unset, None, Base64UrlEncodedCursor]):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[List[str], Result]]
+        Response[Result]
     """
 
     kwargs = _get_kwargs(
@@ -191,21 +197,21 @@ async def asyncio(
     *,
     client: Client,
     limit: Union[Unset, None, GetAllSubmodelReferencesAasRepositoryLimit] = UNSET,
-    cursor: Union[Unset, None, str] = UNSET,
-) -> Optional[Union[List[str], Result]]:
+    cursor: Union[Unset, None, "Base64UrlEncodedCursor"] = UNSET,
+) -> Optional[Result]:
     """Returns all submodel references
 
     Args:
         aas_identifier (str):
         limit (Union[Unset, None, GetAllSubmodelReferencesAasRepositoryLimit]):
-        cursor (Union[Unset, None, str]):
+        cursor (Union[Unset, None, Base64UrlEncodedCursor]):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[List[str], Result]
+        Result
     """
 
     return (

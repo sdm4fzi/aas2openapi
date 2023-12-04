@@ -16,17 +16,25 @@ T = TypeVar("T", bound="Reference")
 class Reference:
     """
     Attributes:
-        keys (Union[Unset, List['Key']]):
-        type (Union[Unset, ReferenceType]):
         referred_semantic_id (Union[Unset, Reference]):
+        type (Union[Unset, ReferenceType]):
+        keys (Union[Unset, List['Key']]):
     """
 
-    keys: Union[Unset, List["Key"]] = UNSET
-    type: Union[Unset, ReferenceType] = UNSET
     referred_semantic_id: Union[Unset, "Reference"] = UNSET
+    type: Union[Unset, ReferenceType] = UNSET
+    keys: Union[Unset, List["Key"]] = UNSET
     additional_properties: Dict[str, Any] = attr.ib(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
+        referred_semantic_id: Union[Unset, Dict[str, Any]] = UNSET
+        if not isinstance(self.referred_semantic_id, Unset):
+            referred_semantic_id = self.referred_semantic_id.to_dict()
+
+        type: Union[Unset, str] = UNSET
+        if not isinstance(self.type, Unset):
+            type = self.type.value
+
         keys: Union[Unset, List[Dict[str, Any]]] = UNSET
         if not isinstance(self.keys, Unset):
             keys = []
@@ -35,23 +43,15 @@ class Reference:
 
                 keys.append(keys_item)
 
-        type: Union[Unset, str] = UNSET
-        if not isinstance(self.type, Unset):
-            type = self.type.value
-
-        referred_semantic_id: Union[Unset, Dict[str, Any]] = UNSET
-        if not isinstance(self.referred_semantic_id, Unset):
-            referred_semantic_id = self.referred_semantic_id.to_dict()
-
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update({})
-        if keys is not UNSET:
-            field_dict["keys"] = keys
+        if referred_semantic_id is not UNSET:
+            field_dict["referredSemanticId"] = referred_semantic_id
         if type is not UNSET:
             field_dict["type"] = type
-        if referred_semantic_id is not UNSET:
-            field_dict["referredSemanticID"] = referred_semantic_id
+        if keys is not UNSET:
+            field_dict["keys"] = keys
 
         return field_dict
 
@@ -60,12 +60,12 @@ class Reference:
         from ..models.key import Key
 
         d = src_dict.copy()
-        keys = []
-        _keys = d.pop("keys", UNSET)
-        for keys_item_data in _keys or []:
-            keys_item = Key.from_dict(keys_item_data)
-
-            keys.append(keys_item)
+        _referred_semantic_id = d.pop("referredSemanticId", UNSET)
+        referred_semantic_id: Union[Unset, Reference]
+        if isinstance(_referred_semantic_id, Unset):
+            referred_semantic_id = UNSET
+        else:
+            referred_semantic_id = Reference.from_dict(_referred_semantic_id)
 
         _type = d.pop("type", UNSET)
         type: Union[Unset, ReferenceType]
@@ -74,17 +74,17 @@ class Reference:
         else:
             type = ReferenceType(_type)
 
-        _referred_semantic_id = d.pop("referredSemanticID", UNSET)
-        referred_semantic_id: Union[Unset, Reference]
-        if isinstance(_referred_semantic_id, Unset):
-            referred_semantic_id = UNSET
-        else:
-            referred_semantic_id = Reference.from_dict(_referred_semantic_id)
+        keys = []
+        _keys = d.pop("keys", UNSET)
+        for keys_item_data in _keys or []:
+            keys_item = Key.from_dict(keys_item_data)
+
+            keys.append(keys_item)
 
         reference = cls(
-            keys=keys,
-            type=type,
             referred_semantic_id=referred_semantic_id,
+            type=type,
+            keys=keys,
         )
 
         reference.additional_properties = d

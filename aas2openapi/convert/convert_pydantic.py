@@ -35,7 +35,9 @@ def convert_pydantic_model_to_aas(
             )
             aas_submodels.append(tempsubmodel)
 
-    asset_information = model.AssetInformation()
+    asset_information = model.AssetInformation(
+        global_asset_id=model.Identifier(pydantic_aas.id_),
+    )
 
     basyx_aas = model.AssetAdministrationShell(
         asset_information=asset_information,
@@ -64,7 +66,7 @@ def get_id_short(element: Union[base.AAS, base.Submodel, base.SubmodelElementCol
 
 def get_semantic_id(pydantic_model: base.Submodel | base.SubmodelElementCollection) -> str | None:
     if pydantic_model.semantic_id:
-        semantic_id = model.GlobalReference(
+        semantic_id = model.ExternalReference(
             key=(model.Key(model.KeyTypes.GLOBAL_REFERENCE, pydantic_model.semantic_id), )
         )
     else:
@@ -98,8 +100,7 @@ def create_submodel_element(
     attribute_name: str,
     attribute_value: Union[
         base.SubmodelElementCollection, str, float, int, bool, tuple, list, set
-    ],
-    extend_attribute_name_for_id: bool = False,
+    ]
 ) -> model.SubmodelElement:
     """
     Create a basyx SubmodelElement from a pydantic SubmodelElementCollection or a primitive type
@@ -113,7 +114,7 @@ def create_submodel_element(
         model.SubmodelElement: basyx SubmodelElement
     """
     if isinstance(attribute_value, base.SubmodelElementCollection):
-        smc = create_submodel_element_collection(attribute_value, attribute_name, extend_attribute_name_for_id)
+        smc = create_submodel_element_collection(attribute_value, attribute_name)
         return smc
     elif isinstance(attribute_value, list) or isinstance(attribute_value, tuple):
         sml = create_submodel_element_list(attribute_name, attribute_value)
@@ -136,7 +137,7 @@ def create_submodel_element(
         )
         reference = model.ModelReference(key=(key,), type_="")
         reference_element = model.ReferenceElement(
-            id_short=get_attribute_id(attribute_name, attribute_value, extend_attribute_name_for_id),
+            id_short=attribute_name,
             value=reference,
             embedded_data_specifications=[
                 convert_util.get_data_specification_for_attribute_name(attribute_name)
@@ -144,7 +145,7 @@ def create_submodel_element(
         )
         return reference_element
     else:
-        property = create_property(attribute_name, attribute_value, extend_attribute_name_for_id)
+        property = create_property(attribute_name, attribute_value)
 
         return property
 
@@ -161,19 +162,11 @@ def get_value_type_of_attribute(
     else:
         return model.datatypes.String
 
-def get_attribute_id(attribute_name: str, attribute_value: Any, extend_attribute_name_for_id: bool = False) -> str:
-    if extend_attribute_name_for_id:
-        id_short = attribute_name + "_" + str(id(attribute_value))
-    else:
-        id_short = attribute_name
-    return id_short
-
 def create_property(
     attribute_name: str, attribute_value: Union[str, int, float, bool],
-    extend_attribute_name_for_id: bool = False
 ) -> model.Property:
     property = model.Property(
-        id_short=get_attribute_id(attribute_name, attribute_value, extend_attribute_name_for_id),
+        id_short=attribute_name,
         value_type=get_value_type_of_attribute(attribute_value),
         value=attribute_value,
         embedded_data_specifications=[
@@ -185,7 +178,6 @@ def create_property(
 
 def create_submodel_element_collection(
     pydantic_submodel_element_collection: base.SubmodelElementCollection, name: str, 
-    extend_attribute_name_for_id: bool = False
 ) -> model.SubmodelElementCollection:
     value = []
     smc_attributes = get_vars(pydantic_submodel_element_collection)
@@ -195,8 +187,6 @@ def create_submodel_element_collection(
         value.append(sme)
 
     id_short = get_id_short(pydantic_submodel_element_collection)
-    if extend_attribute_name_for_id:
-        id_short = get_attribute_id(id_short, value, extend_attribute_name_for_id)
 
     smc = model.SubmodelElementCollection(
         id_short=id_short,
@@ -215,7 +205,9 @@ def create_submodel_element_list(
 ) -> model.SubmodelElementList:
     submodel_elements = []
     for el in value:
-        submodel_element = create_submodel_element(name, el, True)
+        submodel_element = create_submodel_element(name, el)
+        # TODO: save id_short in data specifications or make it optional for reverse transformation!
+        submodel_element.id_short = None
         submodel_elements.append(submodel_element)
 
     if submodel_elements and isinstance(submodel_elements[0], model.Property):
@@ -258,78 +250,8 @@ class ClientModel(BaseModel):
             self.basyx_object, cls=basyx.aas.adapter.json.AASToJsonEncoder
         )
         data: dict = json.loads(basyx_json_string)
-        data = rename_data_specifications_for_aas_repository(data)
-        data = rename_semantic_id_for_aas_repository(data)
                 
         return data
-    
-
-def rename_assetKind(data: dict) -> dict:
-    if not data["assetInformation"]["assetKind"]:
-        raise ValueError("No assetKind found in item:", data)
-    if data["assetInformation"]["assetKind"] == "Instance":
-        data["assetInformation"]["assetKind"] = AssetInformationAssetKind.INSTANCE
-    elif data["assetInformation"]["assetKind"] == "Type":
-        data["assetInformation"]["assetKind"] = AssetInformationAssetKind.TYPE
-    return data
-
-def rename_data_specifications_for_aas_repository(dictionary: dict):
-    for key, value in dictionary.items():
-        if key == "embeddedDataSpecifications":
-            for data_spec in value:
-                if data_spec["dataSpecification"]["type"] == "GlobalReference":
-                    data_spec["dataSpecification"]["type"] = "ExternalReference"
-                if data_spec["dataSpecificationContent"]["modelType"] == "DataSpecificationIEC61360":
-                    data_spec["dataSpecificationContent"]["modelType"] = "DataSpecificationIec61360"
-        elif isinstance(value, dict):
-            rename_data_specifications_for_aas_repository(value)
-        elif isinstance(value, list):
-            for item in value:
-                if isinstance(item, dict):
-                    rename_data_specifications_for_aas_repository(item)
-    return dictionary
-
-def rename_semantic_id_for_aas_repository(dictionary: dict):
-    for key, value in dictionary.items():
-        if key == "semanticId":
-            if value["type"] == "GlobalReference":
-                value["type"] = "ExternalReference"
-        elif isinstance(value, dict):
-            rename_semantic_id_for_aas_repository(value)
-        elif isinstance(value, list):
-            for item in value:
-                if isinstance(item, dict):
-                    rename_semantic_id_for_aas_repository(item)
-    return dictionary
-
-def rename_data_specifications_for_basyx(dictionary: dict) -> None:
-    for key, value in dictionary.items():
-        if key == "embeddedDataSpecifications":
-            for data_spec in value:
-                if data_spec["dataSpecification"]["type"] == "ExternalReference":
-                    data_spec["dataSpecification"]["type"] = "GlobalReference"
-                if data_spec["dataSpecificationContent"]["modelType"] == "DataSpecificationIec61360":
-                    data_spec["dataSpecificationContent"]["modelType"] = "DataSpecificationIEC61360"
-        elif isinstance(value, dict):
-            rename_data_specifications_for_basyx(value)
-        elif isinstance(value, list):
-            for item in value:
-                if isinstance(item, dict):
-                    rename_data_specifications_for_basyx(item)
-
-
-def rename_semantic_id_for_basyx(dictionary: dict):
-    for key, value in dictionary.items():
-        if key == "semanticId":
-            if value["type"] == "ExternalReference":
-                value["type"] = "GlobalReference"
-        elif isinstance(value, dict):
-            rename_semantic_id_for_basyx(value)
-        elif isinstance(value, list):
-            for item in value:
-                if isinstance(item, dict):
-                    rename_semantic_id_for_basyx(item)
-    
 
 
 def remove_empty_lists(dictionary: dict) -> None:

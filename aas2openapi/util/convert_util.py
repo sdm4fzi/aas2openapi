@@ -141,7 +141,7 @@ def get_data_specification_for_pydantic_model(
     pydantic_model: BaseModel,
 ) -> model.EmbeddedDataSpecification:
     return model.EmbeddedDataSpecification(
-        data_specification=model.GlobalReference(
+        data_specification=model.ExternalReference(
             key=(
                 model.Key(
                     type_=model.KeyTypes.GLOBAL_REFERENCE,
@@ -161,7 +161,7 @@ def get_data_specification_for_attribute_name(
 ) -> model.EmbeddedDataSpecification:
     # TODO: also specify here if the attribute is required or not!
     return model.EmbeddedDataSpecification(
-        data_specification=model.GlobalReference(
+        data_specification=model.ExternalReference(
             key=(
                 model.Key(
                     type_=model.KeyTypes.GLOBAL_REFERENCE,

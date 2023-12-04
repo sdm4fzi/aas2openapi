@@ -6,8 +6,6 @@ from fastapi import HTTPException
 
 from aas2openapi.convert.convert_pydantic import (
     remove_empty_lists,
-    rename_data_specifications_for_basyx,
-    rename_semantic_id_for_basyx,
 )
 
 import basyx.aas.adapter.json
@@ -82,8 +80,6 @@ def transform_client_to_basyx_model(
     Returns:
         Union[model.AssetAdministrationShell, model.Submodel]: basyx model from the given client model
     """
-    rename_data_specifications_for_basyx(client_model)
-    rename_semantic_id_for_basyx(client_model)
     remove_empty_lists(client_model)
     json_model = json.dumps(client_model, indent=4)
     basyx_model = json.loads(json_model, cls=basyx.aas.adapter.json.AASFromJsonDecoder)

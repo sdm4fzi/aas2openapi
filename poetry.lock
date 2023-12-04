@@ -73,57 +73,49 @@ name = "ba-syx-aas-repository-client"
 version = "2.0"
 description = "A client library for accessing BaSyx AAS Repository"
 optional = false
-python-versions = "^3.8"
-files = []
-develop = false
+python-versions = ">=3.8,<4.0"
+files = [
+    {file = "ba_syx_aas_repository_client-2.0-py3-none-any.whl", hash = "sha256:82ddc0cfae51c31c8409f7a0643ebc91e421b69ae847b2f4dc87048825f8c46c"},
+    {file = "ba_syx_aas_repository_client-2.0.tar.gz", hash = "sha256:f9815f727d0d05f3044155848d657bdaa16c43b1913938d1636048d3c2fc26f8"},
+]
 
 [package.dependencies]
 attrs = ">=21.3.0"
 httpx = ">=0.15.4,<0.25.0"
-python-dateutil = "^2.8.0"
-
-[package.source]
-type = "directory"
-url = "ba-syx-aas-repository-client"
+python-dateutil = ">=2.8.0,<3.0.0"
 
 [[package]]
 name = "ba-syx-submodel-repository-client"
-version = "2.0"
+version = "3.0"
 description = "A client library for accessing BaSyx Submodel Repository"
 optional = false
-python-versions = "^3.8"
-files = []
-develop = false
+python-versions = ">=3.8,<4.0"
+files = [
+    {file = "ba_syx_submodel_repository_client-3.0-py3-none-any.whl", hash = "sha256:88426c5f390a819d83d2a0f9eecc640714bfe15bec1f3aef9c93b0ea6009dda4"},
+    {file = "ba_syx_submodel_repository_client-3.0.tar.gz", hash = "sha256:2724cd2a024b7d84b16d45bc631e7a3977622055922cb6a91c553b87bd19b8dc"},
+]
 
 [package.dependencies]
 attrs = ">=21.3.0"
 httpx = ">=0.15.4,<0.25.0"
-python-dateutil = "^2.8.0"
-
-[package.source]
-type = "directory"
-url = "ba-syx-submodel-repository-client"
+python-dateutil = ">=2.8.0,<3.0.0"
 
 [[package]]
 name = "basyx-python-sdk"
-version = "0.2.2"
-description = ""
+version = "1.0.0"
+description = "The Eclipse BaSyx Python SDK, an implementation of the Asset Administration Shell for Industry 4.0 systems"
 optional = false
 python-versions = ">=3.7"
-files = []
-develop = false
+files = [
+    {file = "basyx-python-sdk-1.0.0.tar.gz", hash = "sha256:e6c3888de38e39573ec3f1ea230442c6d21048de4804c62717563c621803a385"},
+    {file = "basyx_python_sdk-1.0.0-py3-none-any.whl", hash = "sha256:e51b183a7160a7b2e5d44b665e7164a901e26b4d6ed083ca899c8961d005a33b"},
+]
 
 [package.dependencies]
 lxml = ">=4.2,<5"
 pyecma376-2 = ">=0.2.4"
 python-dateutil = ">=2.8,<3"
 urllib3 = ">=1.26,<2.0"
-
-[package.source]
-type = "git"
-url = "https://github.com/eclipse-basyx/basyx-python-sdk.git"
-reference = "ab298a769b446d162b35fa4a8039713cc71371b1"
-resolved_reference = "ab298a769b446d162b35fa4a8039713cc71371b1"
 
 [[package]]
 name = "black"
@@ -1098,13 +1090,13 @@ files = [
 
 [[package]]
 name = "platformdirs"
-version = "4.0.0"
+version = "4.1.0"
 description = "A small Python package for determining appropriate platform-specific dirs, e.g. a \"user data dir\"."
 optional = false
-python-versions = ">=3.7"
+python-versions = ">=3.8"
 files = [
-    {file = "platformdirs-4.0.0-py3-none-any.whl", hash = "sha256:118c954d7e949b35437270383a3f2531e99dd93cf7ce4dc8340d3356d30f173b"},
-    {file = "platformdirs-4.0.0.tar.gz", hash = "sha256:cb633b2bcf10c51af60beb0ab06d2f1d69064b43abf4c185ca6b28865f3f9731"},
+    {file = "platformdirs-4.1.0-py3-none-any.whl", hash = "sha256:11c8f37bcca40db96d8144522d925583bdb7a31f7b0e37e3ed4318400a8e2380"},
+    {file = "platformdirs-4.1.0.tar.gz", hash = "sha256:906d548203468492d432bcb294d4bc2fff751bf84971fbb2c10918cc206ee420"},
 ]
 
 [package.extras]
@@ -1916,4 +1908,4 @@ testing = ["coverage (>=5.0.3)", "zope.event", "zope.testing"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "698c0887ea1c2a7a633aa2ca7ca47596038a9800f4811e8b8c90f4d1a11fe6ca"
+content-hash = "23c3f4ef554f20e7134d3db5bf33ea1c66c656c2124c5db52acb89c19c778b3a"

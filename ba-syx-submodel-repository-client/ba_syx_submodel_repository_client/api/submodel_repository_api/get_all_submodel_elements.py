@@ -1,10 +1,11 @@
 from http import HTTPStatus
-from typing import Any, Dict, Optional, Union, cast
+from typing import Any, Dict, Optional, Union
 
 import httpx
 
 from ... import errors
 from ...client import Client
+from ...models.base_64_url_encoded_cursor import Base64UrlEncodedCursor
 from ...models.get_all_submodel_elements_extent import GetAllSubmodelElementsExtent
 from ...models.get_all_submodel_elements_level import GetAllSubmodelElementsLevel
 from ...models.get_all_submodel_elements_limit import GetAllSubmodelElementsLimit
@@ -17,7 +18,7 @@ def _get_kwargs(
     *,
     client: Client,
     limit: Union[Unset, None, GetAllSubmodelElementsLimit] = UNSET,
-    cursor: Union[Unset, None, str] = UNSET,
+    cursor: Union[Unset, None, "Base64UrlEncodedCursor"] = UNSET,
     level: Union[Unset, None, GetAllSubmodelElementsLevel] = GetAllSubmodelElementsLevel.DEEP,
     extent: Union[Unset, None, GetAllSubmodelElementsExtent] = GetAllSubmodelElementsExtent.WITHOUTBLOBVALUE,
 ) -> Dict[str, Any]:
@@ -35,7 +36,12 @@ def _get_kwargs(
 
     params["limit"] = json_limit
 
-    params["cursor"] = cursor
+    json_cursor: Union[Unset, None, Dict[str, Any]] = UNSET
+    if not isinstance(cursor, Unset):
+        json_cursor = cursor.to_dict() if cursor else None
+
+    if not isinstance(json_cursor, Unset) and json_cursor is not None:
+        params.update(json_cursor)
 
     json_level: Union[Unset, None, str] = UNSET
     if not isinstance(level, Unset):
@@ -62,22 +68,15 @@ def _get_kwargs(
     }
 
 
-def _parse_response(*, client: Client, response: httpx.Response) -> Optional[Union[Result, str]]:
-    if response.status_code == HTTPStatus.BAD_REQUEST:
-        response_400 = Result.from_dict(response.json())
-
-        return response_400
-    if response.status_code == HTTPStatus.INTERNAL_SERVER_ERROR:
-        response_500 = Result.from_dict(response.json())
-
-        return response_500
-    if response.status_code == HTTPStatus.OK:
-        response_200 = cast(str, response.json())
-        return response_200
+def _parse_response(*, client: Client, response: httpx.Response) -> Optional[Result]:
     if response.status_code == HTTPStatus.UNAUTHORIZED:
         response_401 = Result.from_dict(response.json())
 
         return response_401
+    if response.status_code == HTTPStatus.OK:
+        response_200 = Result.from_dict(response.json())
+
+        return response_200
     if response.status_code == HTTPStatus.FORBIDDEN:
         response_403 = Result.from_dict(response.json())
 
@@ -86,13 +85,21 @@ def _parse_response(*, client: Client, response: httpx.Response) -> Optional[Uni
         response_404 = Result.from_dict(response.json())
 
         return response_404
+    if response.status_code == HTTPStatus.BAD_REQUEST:
+        response_400 = Result.from_dict(response.json())
+
+        return response_400
+    if response.status_code == HTTPStatus.INTERNAL_SERVER_ERROR:
+        response_500 = Result.from_dict(response.json())
+
+        return response_500
     if client.raise_on_unexpected_status:
         raise errors.UnexpectedStatus(response.status_code, response.content)
     else:
         return None
 
 
-def _build_response(*, client: Client, response: httpx.Response) -> Response[Union[Result, str]]:
+def _build_response(*, client: Client, response: httpx.Response) -> Response[Result]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -106,16 +113,16 @@ def sync_detailed(
     *,
     client: Client,
     limit: Union[Unset, None, GetAllSubmodelElementsLimit] = UNSET,
-    cursor: Union[Unset, None, str] = UNSET,
+    cursor: Union[Unset, None, "Base64UrlEncodedCursor"] = UNSET,
     level: Union[Unset, None, GetAllSubmodelElementsLevel] = GetAllSubmodelElementsLevel.DEEP,
     extent: Union[Unset, None, GetAllSubmodelElementsExtent] = GetAllSubmodelElementsExtent.WITHOUTBLOBVALUE,
-) -> Response[Union[Result, str]]:
+) -> Response[Result]:
     """Returns all submodel elements including their hierarchy
 
     Args:
         submodel_identifier (str):
         limit (Union[Unset, None, GetAllSubmodelElementsLimit]):
-        cursor (Union[Unset, None, str]):
+        cursor (Union[Unset, None, Base64UrlEncodedCursor]):
         level (Union[Unset, None, GetAllSubmodelElementsLevel]):  Default:
             GetAllSubmodelElementsLevel.DEEP.
         extent (Union[Unset, None, GetAllSubmodelElementsExtent]):  Default:
@@ -126,7 +133,7 @@ def sync_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Result, str]]
+        Response[Result]
     """
 
     kwargs = _get_kwargs(
@@ -151,16 +158,16 @@ def sync(
     *,
     client: Client,
     limit: Union[Unset, None, GetAllSubmodelElementsLimit] = UNSET,
-    cursor: Union[Unset, None, str] = UNSET,
+    cursor: Union[Unset, None, "Base64UrlEncodedCursor"] = UNSET,
     level: Union[Unset, None, GetAllSubmodelElementsLevel] = GetAllSubmodelElementsLevel.DEEP,
     extent: Union[Unset, None, GetAllSubmodelElementsExtent] = GetAllSubmodelElementsExtent.WITHOUTBLOBVALUE,
-) -> Optional[Union[Result, str]]:
+) -> Optional[Result]:
     """Returns all submodel elements including their hierarchy
 
     Args:
         submodel_identifier (str):
         limit (Union[Unset, None, GetAllSubmodelElementsLimit]):
-        cursor (Union[Unset, None, str]):
+        cursor (Union[Unset, None, Base64UrlEncodedCursor]):
         level (Union[Unset, None, GetAllSubmodelElementsLevel]):  Default:
             GetAllSubmodelElementsLevel.DEEP.
         extent (Union[Unset, None, GetAllSubmodelElementsExtent]):  Default:
@@ -171,7 +178,7 @@ def sync(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Result, str]
+        Result
     """
 
     return sync_detailed(
@@ -189,16 +196,16 @@ async def asyncio_detailed(
     *,
     client: Client,
     limit: Union[Unset, None, GetAllSubmodelElementsLimit] = UNSET,
-    cursor: Union[Unset, None, str] = UNSET,
+    cursor: Union[Unset, None, "Base64UrlEncodedCursor"] = UNSET,
     level: Union[Unset, None, GetAllSubmodelElementsLevel] = GetAllSubmodelElementsLevel.DEEP,
     extent: Union[Unset, None, GetAllSubmodelElementsExtent] = GetAllSubmodelElementsExtent.WITHOUTBLOBVALUE,
-) -> Response[Union[Result, str]]:
+) -> Response[Result]:
     """Returns all submodel elements including their hierarchy
 
     Args:
         submodel_identifier (str):
         limit (Union[Unset, None, GetAllSubmodelElementsLimit]):
-        cursor (Union[Unset, None, str]):
+        cursor (Union[Unset, None, Base64UrlEncodedCursor]):
         level (Union[Unset, None, GetAllSubmodelElementsLevel]):  Default:
             GetAllSubmodelElementsLevel.DEEP.
         extent (Union[Unset, None, GetAllSubmodelElementsExtent]):  Default:
@@ -209,7 +216,7 @@ async def asyncio_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Result, str]]
+        Response[Result]
     """
 
     kwargs = _get_kwargs(
@@ -232,16 +239,16 @@ async def asyncio(
     *,
     client: Client,
     limit: Union[Unset, None, GetAllSubmodelElementsLimit] = UNSET,
-    cursor: Union[Unset, None, str] = UNSET,
+    cursor: Union[Unset, None, "Base64UrlEncodedCursor"] = UNSET,
     level: Union[Unset, None, GetAllSubmodelElementsLevel] = GetAllSubmodelElementsLevel.DEEP,
     extent: Union[Unset, None, GetAllSubmodelElementsExtent] = GetAllSubmodelElementsExtent.WITHOUTBLOBVALUE,
-) -> Optional[Union[Result, str]]:
+) -> Optional[Result]:
     """Returns all submodel elements including their hierarchy
 
     Args:
         submodel_identifier (str):
         limit (Union[Unset, None, GetAllSubmodelElementsLimit]):
-        cursor (Union[Unset, None, str]):
+        cursor (Union[Unset, None, Base64UrlEncodedCursor]):
         level (Union[Unset, None, GetAllSubmodelElementsLevel]):  Default:
             GetAllSubmodelElementsLevel.DEEP.
         extent (Union[Unset, None, GetAllSubmodelElementsExtent]):  Default:
@@ -252,7 +259,7 @@ async def asyncio(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Result, str]
+        Result
     """
 
     return (

@@ -24,27 +24,27 @@ class AssetAdministrationShell:
         asset_information (Union[Unset, AssetInformation]):
         derived_from (Union[Unset, Reference]):
         submodels (Union[Unset, List['Reference']]):
-        embedded_data_specifications (Union[Unset, List['EmbeddedDataSpecification']]):
         id (Union[Unset, str]):
         administration (Union[Unset, AdministrativeInformation]):
-        display_name (Union[Unset, List['LangStringNameType']]):
-        description (Union[Unset, List['LangStringTextType']]):
         category (Union[Unset, str]):
         id_short (Union[Unset, str]):
         extensions (Union[Unset, List['Extension']]):
+        embedded_data_specifications (Union[Unset, List['EmbeddedDataSpecification']]):
+        display_name (Union[Unset, List['LangStringNameType']]):
+        description (Union[Unset, List['LangStringTextType']]):
     """
 
     asset_information: Union[Unset, "AssetInformation"] = UNSET
     derived_from: Union[Unset, "Reference"] = UNSET
     submodels: Union[Unset, List["Reference"]] = UNSET
-    embedded_data_specifications: Union[Unset, List["EmbeddedDataSpecification"]] = UNSET
     id: Union[Unset, str] = UNSET
     administration: Union[Unset, "AdministrativeInformation"] = UNSET
-    display_name: Union[Unset, List["LangStringNameType"]] = UNSET
-    description: Union[Unset, List["LangStringTextType"]] = UNSET
     category: Union[Unset, str] = UNSET
     id_short: Union[Unset, str] = UNSET
     extensions: Union[Unset, List["Extension"]] = UNSET
+    embedded_data_specifications: Union[Unset, List["EmbeddedDataSpecification"]] = UNSET
+    display_name: Union[Unset, List["LangStringNameType"]] = UNSET
+    description: Union[Unset, List["LangStringTextType"]] = UNSET
     additional_properties: Dict[str, Any] = attr.ib(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
@@ -64,6 +64,21 @@ class AssetAdministrationShell:
 
                 submodels.append(submodels_item)
 
+        id = self.id
+        administration: Union[Unset, Dict[str, Any]] = UNSET
+        if not isinstance(self.administration, Unset):
+            administration = self.administration.to_dict()
+
+        category = self.category
+        id_short = self.id_short
+        extensions: Union[Unset, List[Dict[str, Any]]] = UNSET
+        if not isinstance(self.extensions, Unset):
+            extensions = []
+            for extensions_item_data in self.extensions:
+                extensions_item = extensions_item_data.to_dict()
+
+                extensions.append(extensions_item)
+
         embedded_data_specifications: Union[Unset, List[Dict[str, Any]]] = UNSET
         if not isinstance(self.embedded_data_specifications, Unset):
             embedded_data_specifications = []
@@ -71,11 +86,6 @@ class AssetAdministrationShell:
                 embedded_data_specifications_item = embedded_data_specifications_item_data.to_dict()
 
                 embedded_data_specifications.append(embedded_data_specifications_item)
-
-        id = self.id
-        administration: Union[Unset, Dict[str, Any]] = UNSET
-        if not isinstance(self.administration, Unset):
-            administration = self.administration.to_dict()
 
         display_name: Union[Unset, List[Dict[str, Any]]] = UNSET
         if not isinstance(self.display_name, Unset):
@@ -93,16 +103,6 @@ class AssetAdministrationShell:
 
                 description.append(description_item)
 
-        category = self.category
-        id_short = self.id_short
-        extensions: Union[Unset, List[Dict[str, Any]]] = UNSET
-        if not isinstance(self.extensions, Unset):
-            extensions = []
-            for extensions_item_data in self.extensions:
-                extensions_item = extensions_item_data.to_dict()
-
-                extensions.append(extensions_item)
-
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update({})
@@ -112,22 +112,22 @@ class AssetAdministrationShell:
             field_dict["derivedFrom"] = derived_from
         if submodels is not UNSET:
             field_dict["submodels"] = submodels
-        if embedded_data_specifications is not UNSET:
-            field_dict["embeddedDataSpecifications"] = embedded_data_specifications
         if id is not UNSET:
             field_dict["id"] = id
         if administration is not UNSET:
             field_dict["administration"] = administration
-        if display_name is not UNSET:
-            field_dict["displayName"] = display_name
-        if description is not UNSET:
-            field_dict["description"] = description
         if category is not UNSET:
             field_dict["category"] = category
         if id_short is not UNSET:
             field_dict["idShort"] = id_short
         if extensions is not UNSET:
             field_dict["extensions"] = extensions
+        if embedded_data_specifications is not UNSET:
+            field_dict["embeddedDataSpecifications"] = embedded_data_specifications
+        if display_name is not UNSET:
+            field_dict["displayName"] = display_name
+        if description is not UNSET:
+            field_dict["description"] = description
 
         return field_dict
 
@@ -163,15 +163,6 @@ class AssetAdministrationShell:
 
             submodels.append(submodels_item)
 
-        embedded_data_specifications = []
-        _embedded_data_specifications = d.pop("embeddedDataSpecifications", UNSET)
-        for embedded_data_specifications_item_data in _embedded_data_specifications or []:
-            embedded_data_specifications_item = EmbeddedDataSpecification.from_dict(
-                embedded_data_specifications_item_data
-            )
-
-            embedded_data_specifications.append(embedded_data_specifications_item)
-
         id = d.pop("id", UNSET)
 
         _administration = d.pop("administration", UNSET)
@@ -180,6 +171,26 @@ class AssetAdministrationShell:
             administration = UNSET
         else:
             administration = AdministrativeInformation.from_dict(_administration)
+
+        category = d.pop("category", UNSET)
+
+        id_short = d.pop("idShort", UNSET)
+
+        extensions = []
+        _extensions = d.pop("extensions", UNSET)
+        for extensions_item_data in _extensions or []:
+            extensions_item = Extension.from_dict(extensions_item_data)
+
+            extensions.append(extensions_item)
+
+        embedded_data_specifications = []
+        _embedded_data_specifications = d.pop("embeddedDataSpecifications", UNSET)
+        for embedded_data_specifications_item_data in _embedded_data_specifications or []:
+            embedded_data_specifications_item = EmbeddedDataSpecification.from_dict(
+                embedded_data_specifications_item_data
+            )
+
+            embedded_data_specifications.append(embedded_data_specifications_item)
 
         display_name = []
         _display_name = d.pop("displayName", UNSET)
@@ -195,29 +206,18 @@ class AssetAdministrationShell:
 
             description.append(description_item)
 
-        category = d.pop("category", UNSET)
-
-        id_short = d.pop("idShort", UNSET)
-
-        extensions = []
-        _extensions = d.pop("extensions", UNSET)
-        for extensions_item_data in _extensions or []:
-            extensions_item = Extension.from_dict(extensions_item_data)
-
-            extensions.append(extensions_item)
-
         asset_administration_shell = cls(
             asset_information=asset_information,
             derived_from=derived_from,
             submodels=submodels,
-            embedded_data_specifications=embedded_data_specifications,
             id=id,
             administration=administration,
-            display_name=display_name,
-            description=description,
             category=category,
             id_short=id_short,
             extensions=extensions,
+            embedded_data_specifications=embedded_data_specifications,
+            display_name=display_name,
+            description=description,
         )
 
         asset_administration_shell.additional_properties = d

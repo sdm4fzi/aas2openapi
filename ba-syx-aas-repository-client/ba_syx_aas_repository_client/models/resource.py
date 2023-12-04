@@ -11,38 +11,38 @@ T = TypeVar("T", bound="Resource")
 class Resource:
     """
     Attributes:
-        content_type (Union[Unset, str]):
         path (Union[Unset, str]):
+        content_type (Union[Unset, str]):
     """
 
-    content_type: Union[Unset, str] = UNSET
     path: Union[Unset, str] = UNSET
+    content_type: Union[Unset, str] = UNSET
     additional_properties: Dict[str, Any] = attr.ib(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
-        content_type = self.content_type
         path = self.path
+        content_type = self.content_type
 
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update({})
-        if content_type is not UNSET:
-            field_dict["contentType"] = content_type
         if path is not UNSET:
             field_dict["path"] = path
+        if content_type is not UNSET:
+            field_dict["contentType"] = content_type
 
         return field_dict
 
     @classmethod
     def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
         d = src_dict.copy()
-        content_type = d.pop("contentType", UNSET)
-
         path = d.pop("path", UNSET)
 
+        content_type = d.pop("contentType", UNSET)
+
         resource = cls(
-            content_type=content_type,
             path=path,
+            content_type=content_type,
         )
 
         resource.additional_properties = d
