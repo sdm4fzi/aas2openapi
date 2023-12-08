@@ -56,14 +56,14 @@ The data model consists of a product that has a process model and a bill of mate
 
 ```python
 example_product = Product(
-    id_="Product1",
+    id="Product1",
     process_model=ProcessModel(
-        id_="PMP1",
+        id="PMP1",
         processes=["join", "screw"],
         semantic_id="PMP1_semantic_id",
     ),
     bill_of_material=BillOfMaterial(
-        id_="BOMP1", components=["stator", "rotor", "coil", "bearing"],
+        id="BOMP1", components=["stator", "rotor", "coil", "bearing"],
         semantic_id="BOMP1_semantic_id",
         bill_of_material_info=BillOfMaterialInfo(
             id_short="BOMInfoP1",
@@ -156,11 +156,11 @@ We can now run the middleware script with python and access it at `http://localh
   -d '{
   "id_short": "Product1",
   "description": "string",
-  "id_": "Product1",
+  "id": "Product1",
   "bill_of_material": {
     "id_short": "BOMP1",
     "description": "",
-    "id_": "BOMP1",
+    "id": "BOMP1",
     "semantic_id": "BOMP1_semantic_id",
     "components": [
       "stator",
@@ -179,7 +179,7 @@ We can now run the middleware script with python and access it at `http://localh
   "process_model": {
     "id_short": "PMP1",
     "description": "",
-    "id_": "PMP1",
+    "id": "PMP1",
     "semantic_id": "PMP1_semantic_id",
     "processes": [
       "join",

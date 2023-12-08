@@ -36,13 +36,13 @@ def convert_pydantic_model_to_aas(
             aas_submodels.append(tempsubmodel)
 
     asset_information = model.AssetInformation(
-        global_asset_id=model.Identifier(pydantic_aas.id_),
+        global_asset_id=model.Identifier(pydantic_aas.id),
     )
 
     basyx_aas = model.AssetAdministrationShell(
         asset_information=asset_information,
         id_short=get_id_short(pydantic_aas),
-        id_=model.Identifier(pydantic_aas.id_),
+        id_=model.Identifier(pydantic_aas.id),
         description=convert_util.get_basyx_description_from_pydantic_model(pydantic_aas),
         submodel={
             model.ModelReference.from_referable(submodel) for submodel in aas_submodels
@@ -62,7 +62,7 @@ def get_id_short(element: Union[base.AAS, base.Submodel, base.SubmodelElementCol
     if element.id_short:
         return element.id_short
     else:
-        return element.id_
+        return element.id
 
 def get_semantic_id(pydantic_model: base.Submodel | base.SubmodelElementCollection) -> str | None:
     if pydantic_model.semantic_id:
@@ -78,7 +78,7 @@ def convert_pydantic_model_to_submodel(
 ) -> model.Submodel:
     basyx_submodel = model.Submodel(
         id_short=get_id_short(pydantic_submodel),
-        id_=model.Identifier(pydantic_submodel.id_),
+        id_=model.Identifier(pydantic_submodel.id),
         description=convert_util.get_basyx_description_from_pydantic_model(pydantic_submodel),
         embedded_data_specifications=[
             convert_util.get_data_specification_for_pydantic_model(pydantic_submodel)

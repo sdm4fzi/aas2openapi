@@ -203,7 +203,7 @@ def get_all_submodel_elements_from_submodel(model: Type[base.Submodel]) -> Dict[
     """
     submodel_elements = {}
     for field in model.__fields__.values():
-        if field.name != "description" and field.name != "id_short" and field.name != "semantic_id" and field.name != "id_":
+        if field.name != "description" and field.name != "id_short" and field.name != "semantic_id" and field.name != "id":
             submodel_elements[field.name] = field.outer_type_
     return submodel_elements
 
@@ -414,7 +414,7 @@ def get_vars(obj: object) -> dict:
     vars_dict = vars(obj)
     vars_dict = {key: value for key, value in vars_dict.items() if key[0] != "_"}
     vars_dict = {key: value for key, value in vars_dict.items() if value is not None}
-    vars_dict = {key: value for key, value in vars_dict.items() if key != "id_"}
+    vars_dict = {key: value for key, value in vars_dict.items() if key != "id"}
     vars_dict = {key: value for key, value in vars_dict.items() if key != "description"}
     vars_dict = {key: value for key, value in vars_dict.items() if key != "id_short"}
     vars_dict = {key: value for key, value in vars_dict.items() if key != "semantic_id"}

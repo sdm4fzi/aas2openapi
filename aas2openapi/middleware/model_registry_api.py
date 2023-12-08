@@ -117,11 +117,11 @@ def generate_model_api(middleware_instance: Middleware) -> APIRouter:
     async def post_model(model_name: str, model: dict) -> Dict[str, str]:
         if any(model_name == model_instance.__name__ for model_instance in middleware_instance.models):
             raise HTTPException(403, f"A model with the name {model_name} exists already! Please update the existing model.")
-        if not "id_" in model.keys():
-            raise HTTPException(403, f"Mandatory field id_ is missing for the model <{model_name}>.")
+        if not "id" in model.keys():
+            raise HTTPException(403, f"Mandatory field id is missing for the model <{model_name}>.")
         for key, value in model.items():
-            if isinstance(value, dict) and not "id_" in value.keys():
-                raise HTTPException(403, f"Mandatory field id_ is missing in submodel <{key}> for model <{model_name}>.")
+            if isinstance(value, dict) and not "id" in value.keys():
+                raise HTTPException(403, f"Mandatory field id is missing in submodel <{key}> for model <{model_name}>.")
         register_model_from_middleware(model_name, model, middleware_instance)
         return {"message": f"Succesfully created API for model {model_name}."}
     
@@ -129,11 +129,11 @@ def generate_model_api(middleware_instance: Middleware) -> APIRouter:
     async def update_model(model_name: str, model: dict) -> Dict[str, str]:
         if not any(model_name == model_instance.__name__ for model_instance in middleware_instance.models):
             raise HTTPException(403, f"A model with the name {model_name} does not exist yet! Please post a new model.")
-        if not "id_" in model.keys():
-            raise HTTPException(403, f"Mandatory field id_ is missing for the model <{model_name}>.")
+        if not "id" in model.keys():
+            raise HTTPException(403, f"Mandatory field id is missing for the model <{model_name}>.")
         for key, value in model.items():
-            if isinstance(value, dict) and not "id_" in value.keys():
-                raise HTTPException(403, f"Mandatory field id_ is missing in submodel <{key}> for model <{model_name}>.")
+            if isinstance(value, dict) and not "id" in value.keys():
+                raise HTTPException(403, f"Mandatory field id is missing in submodel <{key}> for model <{model_name}>.")
         delete_model_from_middleware(model_name, middleware_instance)
         register_model_from_middleware(model_name, model, middleware_instance)
         return {"message": f"Succesfully updated API for model {model_name}."}

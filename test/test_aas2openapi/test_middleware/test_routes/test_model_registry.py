@@ -7,14 +7,14 @@ import json
 def test_register_model(client, loaded_middleware, example_aas_instance):
     # 1. make example_aas_instance to dict annd remove the id
     dict_aas = example_aas_instance.dict()
-    del dict_aas["id_"]
+    del dict_aas["id"]
     json_aas = json.dumps(dict_aas)
     # 2. register the model in the middleware
     response = client.post(url="/register_model?model_name=example_model", content=json_aas)
     assert response.status_code == 403
     # 4. make example_aas_instance to dict, where the bill of material is missing the id
     dict_aas = example_aas_instance.dict()  
-    del dict_aas["bill_of_material"]["id_"]
+    del dict_aas["bill_of_material"]["id"]
     json_aas = json.dumps(dict_aas)
     response = client.post(url="/register_model/?model_name=example_model", content=json_aas)
     assert response.status_code == 403

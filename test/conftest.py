@@ -68,7 +68,7 @@ def example_submodel_instance() -> models.Submodel:
         Iterator[typing.Generator[Submodel, typing.Any, None]]: the example instance of Submodel.
     """
     return BillOfMaterial(
-        id_="BOMP1",
+        id="BOMP1",
         components=["stator", "rotor", "coil", "bearing"],
         semantic_id="BOMP1_semantic_id",
         bill_of_material_info=BillOfMaterialInfo(
@@ -88,14 +88,14 @@ def example_aas_instance() -> models.AAS:
         Iterator[typing.Generator[Product, typing.Any, None]]: the example instance of Product.
     """
     return Product(
-    id_="Product1",
+    id="Product1",
     process_model=ProcessModel(
-        id_="PMP1",
+        id="PMP1",
         processes=["join", "screw"],
         semantic_id="PMP1_semantic_id",
     ),
     bill_of_material=BillOfMaterial(
-        id_="BOMP1", 
+        id="BOMP1", 
         components=["stator", "rotor", "coil", "bearing"],
         semantic_id="BOMP1_semantic_id",
         bill_of_material_info=BillOfMaterialInfo(

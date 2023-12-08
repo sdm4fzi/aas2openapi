@@ -153,7 +153,7 @@ def generate_submodel_endpoints_from_model(
                 item_id, submodel_name
             )
             await update_aas_on_server(item_id, pydantic_model, submodel_name)
-            await delete_submodel_from_server(submodel.id_)
+            await delete_submodel_from_server(submodel.id)
             return {
                 "message": f"Succesfully deleted submodel {submodel_name} of aas with id {item_id}"
             }
@@ -187,7 +187,7 @@ def generate_aas_endpoints_from_model(pydantic_model: Type[BaseModel]) -> APIRou
     async def post_item(item: pydantic_model) -> Dict[str, str]:
         await check_aas_and_sm_server_online()
         await post_aas_to_server(item)
-        return {"message": f"Created aas with id {item.id_}"}
+        return {"message": f"Created aas with id {item.id}"}
 
     @router.get("/{item_id}", response_model=pydantic_model)
     async def get_item(item_id: str):
@@ -199,7 +199,7 @@ def generate_aas_endpoints_from_model(pydantic_model: Type[BaseModel]) -> APIRou
     async def put_item(item_id: str, item: pydantic_model) -> Dict[str, str]:
         await check_aas_and_sm_server_online()
         await put_aas_to_server(item)
-        return {"message": f"Succesfully updated aas with id {item.id_}"}
+        return {"message": f"Succesfully updated aas with id {item.id}"}
 
     @router.delete("/{item_id}")
     async def delete_item(item_id: str):

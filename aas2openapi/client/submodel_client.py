@@ -76,10 +76,10 @@ async def post_submodel_to_server(pydantic_submodel: base.Submodel):
     Raises:
         HTTPException: If submodel with the given id already exists
     """
-    if await submodel_is_on_server(pydantic_submodel.id_):
+    if await submodel_is_on_server(pydantic_submodel.id):
         raise HTTPException(
             status_code=400,
-            detail=f"Submodel with id {pydantic_submodel.id_} already exists",
+            detail=f"Submodel with id {pydantic_submodel.id} already exists",
         )
     basyx_submodel = aas2openapi.convert_pydantic_model_to_submodel(pydantic_submodel)
     submodel_for_client = convert_pydantic.ClientModel(basyx_object=basyx_submodel)
@@ -95,14 +95,14 @@ async def put_submodel_to_server(submodel: base.Submodel):
     Raises:
         HTTPException: If submodel with the given id does not exist
     """
-    if not await submodel_is_on_server(submodel.id_):
+    if not await submodel_is_on_server(submodel.id):
         raise HTTPException(
-            status_code=400, detail=f"Submodel with id {submodel.id_} does not exist"
+            status_code=400, detail=f"Submodel with id {submodel.id} does not exist"
         )
     basyx_submodel = aas2openapi.convert_pydantic_model_to_submodel(submodel)
     submodel_for_client = convert_pydantic.ClientModel(basyx_object=basyx_submodel)
     client = SMClient(SUBMODEL_SERVER_ADRESS)
-    base_64_id = client_utils.get_base64_from_string(submodel.id_)
+    base_64_id = client_utils.get_base64_from_string(submodel.id)
     response = await put_submodel_by_id.asyncio(
         submodel_identifier=base_64_id, client=client, json_body=submodel_for_client
     )

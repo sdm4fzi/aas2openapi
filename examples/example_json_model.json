@@ -1,10 +1,10 @@
 {
     "Product": {
-        "id_": "P1",
+        "id": "P1",
         "description": "",
         "id_short": "P1",
         "bill_of_material": {
-            "id_": "bomP1",
+            "id": "bomP1",
             "description": "string",
             "id_short": "bomP1",
             "semantic_id": "string",
@@ -22,7 +22,7 @@
             }
         },
         "process_model": {
-            "id_": "pmp1",
+            "id": "pmp1",
             "description": "",
             "id_short": "pmp1",
             "processes": [

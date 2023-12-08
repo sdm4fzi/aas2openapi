@@ -36,14 +36,14 @@ class Process(models.AAS):
 # Test the transformation capabilities of aas2openapi
 
 example_product = Product(
-    id_="Product1",
+    id="Product1",
     process_model=ProcessModel(
-        id_="PMP1",
+        id="PMP1",
         processes=["join", "screw"],
         semantic_id="PMP1_semantic_id",
     ),
     bill_of_material=BillOfMaterial(
-        id_="BOMP1", 
+        id="BOMP1", 
         components=["stator", "rotor", "coil", "bearing"],
         semantic_id="BOMP1_semantic_id",
         bill_of_material_info=BillOfMaterialInfo(
@@ -56,9 +56,9 @@ example_product = Product(
 )
 
 example_process = Process(
-    id_="Process1",
+    id="Process1",
     capability=Capability(
-        id_="Capability1",
+        id="Capability1",
         capability="screw",
         semantic_id="Capability1_semantic_id",
     ),

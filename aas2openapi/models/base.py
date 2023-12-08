@@ -26,16 +26,16 @@ class Identifiable(Referable):
     Base class for all identifiable classes. An Identifiable is a Referable with a global id (id_).
 
     Args:
-        id_ (str): Global id of the object.
+        id (str): Global id of the object.
         id_short (str): Local id of the object.
         description (str, optional): Description of the object. Defaults to None.
     """
-    id_: str
+    id: str
 
     @root_validator(pre=True)
     def set_default_id_short(cls, values):
-        if "id_short" not in values and "id_" in values:
-            values["id_short"] = values["id_"]
+        if "id_short" not in values and "id" in values:
+            values["id_short"] = values["id"]
             return values
         return values
     
@@ -60,7 +60,7 @@ class AAS(Identifiable):
     Base class for all Asset Administration Shells (AAS).
 
     Args:
-        id_ (str): Global id of the object.
+        id (str): Global id of the object.
         id_short (str): Local id of the object.
         description (str, optional): Description of the object. Defaults to None.
     """
@@ -71,7 +71,7 @@ class Submodel(HasSemantics, Identifiable):
     Base class for all submodels.
 
     Args:
-        id_ (str): Global id of the object.
+        id (str): Global id of the object.
         id_short (str): Local id of the object.
         description (str, optional): Description of the object. Defaults to None.
         semantic_id (str, optional): Semantic id of the object. Defaults to None.

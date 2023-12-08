@@ -39,15 +39,15 @@ async def aas_is_on_server(aas_id: str) -> bool:
         return False
 
 def check_aas_for_duplicate_ids(aas: base.AAS):
-    ids = {aas.id_}
+    ids = {aas.id}
     for attribute_name, attribute_value in get_vars(aas).items():
-        if not hasattr(attribute_value, "id_"):
+        if not hasattr(attribute_value, "id"):
             continue
-        if attribute_value.id_ in ids:
+        if attribute_value.id in ids:
             raise HTTPException(
-                status_code=400, detail=f"Duplicate id <{attribute_value.id_}> in AAS <{aas.id_}> of type <{aas.__class__.__name__}> for attribute <{attribute_name}>."
+                status_code=400, detail=f"Duplicate id <{attribute_value.id}> in AAS <{aas.id}> of type <{aas.__class__.__name__}> for attribute <{attribute_name}>."
             )
-        ids.add(attribute_value.id_)
+        ids.add(attribute_value.id)
 
 
 async def post_aas_to_server(aas: base.AAS):
@@ -58,13 +58,13 @@ async def post_aas_to_server(aas: base.AAS):
     Raises:
         HTTPException: If AAS with the given id already exists
     """
-    if await aas_is_on_server(aas.id_):
+    if await aas_is_on_server(aas.id):
         raise HTTPException(
-            status_code=400, detail=f"AAS with id {aas.id_} already exists"
+            status_code=400, detail=f"AAS with id {aas.id} already exists"
         )
     check_aas_for_duplicate_ids(aas)
     obj_store = aas2openapi.convert_pydantic_model_to_aas(aas)
-    basyx_aas = obj_store.get(aas.id_)
+    basyx_aas = obj_store.get(aas.id)
     aas_for_client = ClientModel(basyx_object=basyx_aas)
     client = AASClient(AAS_SERVER_ADRESS)
     response = await post_asset_administration_shell.asyncio(
@@ -73,7 +73,7 @@ async def post_aas_to_server(aas: base.AAS):
 
     aas_attributes = get_vars(aas)
     for submodel in aas_attributes.values():
-        if not await submodel_is_on_server(submodel.id_):
+        if not await submodel_is_on_server(submodel.id):
             await post_submodel_to_server(submodel)
 
 
@@ -85,27 +85,27 @@ async def put_aas_to_server(aas: base.AAS):
     Raises:
         HTTPException: If AAS with the given id does not exist
     """
-    if not await aas_is_on_server(aas.id_):
+    if not await aas_is_on_server(aas.id):
         raise HTTPException(
-            status_code=400, detail=f"AAS with id {aas.id_} does not exist"
+            status_code=400, detail=f"AAS with id {aas.id} does not exist"
         )
     obj_store = aas2openapi.convert_pydantic_model_to_aas(aas)
-    basyx_aas = obj_store.get(aas.id_)
+    basyx_aas = obj_store.get(aas.id)
     aas_for_client = ClientModel(basyx_object=basyx_aas)
     client = AASClient(AAS_SERVER_ADRESS)
-    base_64_id = client_utils.get_base64_from_string(aas.id_)
+    base_64_id = client_utils.get_base64_from_string(aas.id)
     await put_asset_administration_shell_by_id.asyncio(
         aas_identifier=base_64_id, client=client, json_body=aas_for_client
     )
 
     aas_attributes = get_vars(aas)
     for submodel in aas_attributes.values():
-        if await submodel_is_on_server(submodel.id_):
+        if await submodel_is_on_server(submodel.id):
             await put_submodel_to_server(submodel)
         else:
             raise HTTPException(
                 status_code=400,
-                detail=f"Submodel with id {submodel.id_} does not exist. Use POST method to create the submodel.",
+                detail=f"Submodel with id {submodel.id} does not exist. Use POST method to create the submodel.",
             )
 
 
