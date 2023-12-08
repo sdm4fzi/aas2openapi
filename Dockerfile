@@ -1,19 +1,10 @@
 ARG APP_VERSION=0.2.1
-
 FROM python:3.11-slim
 
 # Set the working directory in the container
 WORKDIR /app
-
-# Copy the poetry files into the container
-COPY ba-syx-aas-repository-client/ /app/ba-syx-aas-repository-client
-COPY ba-syx-submodel-repository-client/ /app/ba-syx-submodel-repository-client
-COPY pyproject.toml poetry.lock /app/
-
 # Install dependencies using Poetry
-RUN pip install poetry \
-    && poetry config virtualenvs.create false \
-    && poetry install --no-interaction --no-ansi
+RUN pip install aas2openapi==0.2.1
 
 COPY . /app
 

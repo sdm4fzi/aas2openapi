@@ -12,7 +12,7 @@ services:
       - "8082:8081"
     networks:
       - backend
-  aas2openapi-middleware:
+  aas2openapi:
     build: .
     ports:
       - "8000:8000"

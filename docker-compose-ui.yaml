@@ -49,7 +49,7 @@ services:
       VITE_CD_REPO_PATH: "http://localhost:8081/concept-descriptions"
     restart: always
   
-  aas2openapi-middleware:
+  aas2openapi:
     build: .
     ports:
       - 8000:8000
