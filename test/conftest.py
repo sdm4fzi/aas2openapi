@@ -1,6 +1,7 @@
 import typing
 import os
 import time
+from enum import Enum
 import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
@@ -44,6 +45,26 @@ class Product(models.AAS):
     bill_of_material: BillOfMaterial
     process_model: typing.Optional[ProcessModel]
 
+
+class ProductStateEnum(str, Enum):
+    IN_PROGRESS = "in_progress"
+    FINISHED = "finished"
+    DEFECT = "defect"
+
+class SpecialBillOfMaterialInfo(models.SubmodelElementCollection):
+    manufacterer: str
+    product_type: str
+    product_version: str
+    product_state: ProductStateEnum
+
+class SpecialBillOfMaterial(models.Submodel):
+    components: typing.List[str]
+    bill_of_material_info: typing.Union[SpecialBillOfMaterialInfo, BillOfMaterialInfo]
+
+class SpecialProduct(models.AAS):
+    special_bill_of_material: SpecialBillOfMaterial
+    process_model: typing.Optional[ProcessModel]
+
 @pytest.fixture(scope="class")
 def example_smc() -> typing.Type[models.SubmodelElementCollection]:    
     yield BillOfMaterialInfo
@@ -58,6 +79,9 @@ def example_sm() -> typing.Type[models.Submodel]:
 def example_aas() -> typing.Type[models.AAS]:
     return Product
 
+@pytest.fixture(scope="function")
+def example_special_sm() -> typing.Type[models.Submodel]:
+    return SpecialBillOfMaterial
 
 @pytest.fixture(scope="function")
 def example_submodel_instance() -> models.Submodel:
@@ -107,6 +131,79 @@ def example_aas_instance() -> models.AAS:
     ),
 )
 
+@pytest.fixture(scope="function")
+def example_special_sm_instance1() -> models.Submodel:
+    """
+    Returns an example instance of SpecialBillOfMaterial.
+
+    Yields:
+        Iterator[typing.Generator[SpecialBillOfMaterial, typing.Any, None]]: the example instance of SpecialBillOfMaterial.
+    """
+    return SpecialBillOfMaterial(
+        id="BOMP1",
+        components=["stator", "rotor", "coil", "bearing"],
+        semantic_id="BOMP1_semantic_id",
+        bill_of_material_info=SpecialBillOfMaterialInfo(
+            id_short="BOMInfoP1",
+            semantic_id="BOMInfoP1_semantic_id",
+            manufacterer="Bosch", 
+            product_type="A542", 
+            product_version="1.0.0",
+            product_state=ProductStateEnum.IN_PROGRESS
+        )
+    )
+
+@pytest.fixture(scope="function")
+def example_special_sm_instance2() -> models.Submodel:
+    """
+    Returns an example instance of SpecialBillOfMaterial.
+
+    Yields:
+        Iterator[typing.Generator[SpecialBillOfMaterial, typing.Any, None]]: the example instance of SpecialBillOfMaterial.
+    """
+    return SpecialBillOfMaterial(
+        id="BOMP1",
+        components=["stator", "rotor", "coil", "bearing"],
+        semantic_id="BOMP1_semantic_id",
+        bill_of_material_info=BillOfMaterialInfo(
+            id_short="BOMInfoP1",
+            semantic_id="BOMInfoP1_semantic_id",
+            manufacterer="Bosch", 
+            product_type="A542", 
+        )
+    )
+
+@pytest.fixture(scope="function")
+def example_special_aas_instance() -> models.AAS:
+    """
+    Returns an example instance of SpecialProduct.
+
+    Yields:
+        Iterator[typing.Generator[SpecialProduct, typing.Any, None]]: the example instance of SpecialProduct.
+    """
+    return SpecialProduct(
+    id="Product1",
+    process_model=ProcessModel(
+        id="PMP1",
+        processes=["join", "screw"],
+        semantic_id="PMP1_semantic_id",
+    ),
+    special_bill_of_material=SpecialBillOfMaterial(
+        id="BOMP1", 
+        components=["stator", "rotor", "coil", "bearing"],
+        semantic_id="BOMP1_semantic_id",
+        bill_of_material_info=SpecialBillOfMaterialInfo(
+            id_short="BOMInfoP1",
+            semantic_id="BOMInfoP1_semantic_id",
+            manufacterer="Bosch", 
+            product_type="A542", 
+            product_version="1.0.0",
+            product_state=ProductStateEnum.IN_PROGRESS
+        )
+    ),
+)
+
+
 
 @pytest.fixture(scope="function")
 def empty_middleware() -> Middleware:
@@ -122,7 +219,7 @@ def empty_middleware() -> Middleware:
 
 
 @pytest.fixture(scope="function")
-def loaded_middleware(example_aas_instance: Product) -> Middleware:
+def loaded_middleware(example_aas_instance: Product, example_special_aas_instance: SpecialProduct) -> Middleware:
     """
     Returns an example instance of Middleware with loaded models.
 
@@ -130,7 +227,8 @@ def loaded_middleware(example_aas_instance: Product) -> Middleware:
         Iterator[typing.Generator[Middleware, typing.Any, None]]: the example instance of Middleware with loaded models.
     """
     middleware = Middleware()
-    middleware.load_pydantic_model_instances([example_aas_instance])
+    middleware.load_pydantic_model_instances([example_special_aas_instance, example_aas_instance])
+    # middleware.load_pydantic_models([SpecialProduct, Product])
     middleware.generate_model_registry_api()
     middleware.generate_rest_api()
     middleware.generate_graphql_api()

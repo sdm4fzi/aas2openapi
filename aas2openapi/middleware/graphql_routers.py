@@ -13,13 +13,24 @@ from pydantic.fields import ModelField, FieldInfo
 from pydantic import BaseConfig, validator
 
 from graphene_pydantic import PydanticObjectType, PydanticInputObjectType
+from graphene_pydantic.registry import registry as graphene_registry
+
 import graphene
 from starlette_graphene3 import GraphQLApp, make_graphiql_handler, make_playground_handler
 
 
 from typing import List, Type
 
-def create_graphe_pydantic_output_type_for_model(input_model: Type[BaseModel]) -> PydanticObjectType:
+def add_class_method(model: typing.Type):
+    def is_type_of(cls, root, info):
+        return isinstance(root, (cls, model))
+    class_method = classmethod(is_type_of)
+    model.is_type_of = class_method
+
+
+model_name_registry = set()
+
+def create_graphe_pydantic_output_type_for_model(input_model: Type[BaseModel], union_type: bool = False) -> PydanticObjectType:
     """
     Creates a pydantic model for the given pydantic model.
 
@@ -29,8 +40,17 @@ def create_graphe_pydantic_output_type_for_model(input_model: Type[BaseModel]) -
     Returns:
         PydanticObjectType: Graphene Object type for the given pydantic model.
     """
+    for key, value in graphene_registry.items():
+        for model_name in value._registry.keys():
+            if input_model.__name__.split(".")[-1] == model_name.__name__.split(".")[-1]:
+                # avoid duplicate registration of models
+                return value._registry[model_name]
+
     rework_default_list_to_default_factory(input_model)
     graphene_model = type(input_model.__name__, (PydanticObjectType,), {'Meta': type('Meta', (), {'model': input_model})})
+    if union_type:
+        add_class_method(graphene_model)
+
     return graphene_model
 
 def is_typing_list_or_tuple(input_type: typing.Any) -> bool:
@@ -68,9 +88,10 @@ def rework_default_list_to_default_factory(model: BaseModel):
             field.field_info = FieldInfo(extra={})
             field.required = True
 
+
 def create_graphe_pydantic_output_type_for_submodel_elements(
-    model: BaseModel,
-):
+    model: BaseModel, union_type: bool = False
+) -> PydanticObjectType:
     """
     Create recursively graphene pydantic output types for submodels and submodel elements.
 
@@ -78,15 +99,22 @@ def create_graphe_pydantic_output_type_for_submodel_elements(
         model (typing.Union[base.Submodel, base.SubmodelElementCollectiontuple, list, set, ]): Submodel element for which the graphene pydantic output types should be created.
     """
     for attribute_name, attribute_value in get_all_submodel_elements_from_submodel(model).items():
-        # TODO: also check for union types, and resolve their types to graphene pydantic objects
-        if hasattr(attribute_value, "__fields__") and issubclass(attribute_value, base.SubmodelElementCollection):
+        if convert_util.union_type_check(attribute_value):
+            subtypes = typing.get_args(attribute_value)
+            for subtype in subtypes:
+                create_graphe_pydantic_output_type_for_submodel_elements(subtype, union_type=True)
+        elif hasattr(attribute_value, "__fields__") and issubclass(attribute_value, base.SubmodelElementCollection):
             create_graphe_pydantic_output_type_for_submodel_elements(attribute_value)
         elif is_typing_list_or_tuple(attribute_value):
             if list_contains_any_submodel_element_collections(attribute_value):
                 for nested_type in attribute_value.__args__:
-                    if issubclass(nested_type, base.SubmodelElementCollection):
+                    if convert_util.union_type_check(nested_type):
+                        subtypes = typing.get_args(nested_type)
+                        for subtype in subtypes:
+                            create_graphe_pydantic_output_type_for_submodel_elements(subtype, union_type=True)
+                    elif issubclass(nested_type, base.SubmodelElementCollection):
                         create_graphe_pydantic_output_type_for_submodel_elements(nested_type)
-    create_graphe_pydantic_output_type_for_model(model)
+    return create_graphe_pydantic_output_type_for_model(model, union_type)
 
 def get_base_query_and_mutation_classes() -> typing.Tuple[graphene.ObjectType, graphene.ObjectType]:
     """
@@ -151,8 +179,11 @@ def generate_graphql_endpoint(models: List[Type[BaseModel]]) -> GraphQLApp:
         model_name = model.__name__
         
         submodels = get_all_submodels_from_model(model)
+        graphene_submodels = []
         for submodel in submodels:
-            create_graphe_pydantic_output_type_for_submodel_elements(submodel)  
+            graphene_submodels.append(create_graphe_pydantic_output_type_for_submodel_elements(submodel))
+
+
 
         graphene_model = create_graphe_pydantic_output_type_for_model(model)
         
@@ -160,16 +191,15 @@ def generate_graphql_endpoint(models: List[Type[BaseModel]]) -> GraphQLApp:
         f"{model_name}": graphene.List(graphene_model),
         f"resolve_{model_name}": get_aas_resolve_function(model),
         }
-        query = dynamic_class = type("Query", (query,), class_dict)
+        query = type("Query", (query,), class_dict)
 
-        for submodel in submodels:
+        for submodel, graphene_submodel in zip(submodels, graphene_submodels):
             submodel_name = submodel.__name__
-            submodel_graphene_model = create_graphe_pydantic_output_type_for_model(submodel)
             class_dict = {
-            f"{submodel_name}": graphene.List(submodel_graphene_model),
+            f"{submodel_name}": graphene.List(graphene_submodel),
             f"resolve_{submodel_name}": get_submodel_resolve_function(submodel),
             }
-            query = dynamic_class = type("Query", (query,), class_dict) 
+            query = type("Query", (query,), class_dict)
    
     schema = graphene.Schema(query=query)
     return GraphQLApp(schema=schema, on_get=make_graphiql_handler())

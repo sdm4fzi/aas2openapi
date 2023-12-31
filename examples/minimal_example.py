@@ -2,16 +2,24 @@ import typing
 import aas2openapi
 from aas2openapi.middleware import Middleware
 from aas2openapi import models
+from enum import Enum
+
 
 
 class BillOfMaterialInfo(models.SubmodelElementCollection):
     manufacterer: str
     product_type: str
 
+
+class BOM_Type(Enum):
+    MBOM = "MBOM"
+    EBOM = "EBOM"
+    SBOM = "SBOM"
+
 class BillOfMaterial(models.Submodel):
     components: typing.List[str]
     bill_of_material_info: BillOfMaterialInfo
-
+    bom_type: BOM_Type
 
 class ProcessModel(models.Submodel):
     processes: typing.List[str]
@@ -51,7 +59,8 @@ example_product = Product(
             semantic_id="BOMInfoP1_semantic_id",
             manufacterer="Bosch", 
             product_type="A542", 
-        )
+        ),
+        bom_type="MBOM",
     ),
 )
 
@@ -78,8 +87,8 @@ data_model = aas2openapi.convert_object_store_to_pydantic_models(obj_store)
 # Create the middleware and load the models
 middleware = Middleware()
 
-# middleware.load_pydantic_models([Product])
-middleware.load_pydantic_model_instances([example_product, example_process])
+middleware.load_pydantic_models([Product])
+# middleware.load_pydantic_model_instances([example_product, example_process])
 # middleware.load_aas_objectstore(obj_store)
 # middleware.load_json_models(file_path="examples/example_json_model.json")
 middleware.generate_rest_api()

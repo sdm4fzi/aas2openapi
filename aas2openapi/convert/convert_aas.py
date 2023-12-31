@@ -22,7 +22,7 @@ def convert_object_store_to_pydantic_models(obj_store: model.DictObjectStore) ->
     pydantic_submodels: typing.List[base.Submodel] = []
     for identifiable in obj_store:
         if isinstance(identifiable, model.Submodel):
-            pydantic_submodel = convert_sm_to_pydantic_model(identifiable)
+            pydantic_submodel = convert_submodel_to_pydantic_model(identifiable)
             pydantic_submodels.append(pydantic_submodel)
 
     pydantic_aas_list: typing.List[base.AAS] = []
@@ -43,6 +43,7 @@ def convert_aas_to_pydantic_model(aas: model.AssetAdministrationShell, pydantic_
     Returns:
         base.AAS: Pydantic model of the asset administration shell
     """
+    # TODO: rework here if information in data specification changes
     aas_class_name = convert_util.get_class_name_from_basyx_model(aas)
     pydantic_base_aas = base.AAS(
         id=str(aas.id),
@@ -101,7 +102,7 @@ def get_semantic_id_value_of_model(sm: typing.Union[model.Submodel, model.Submod
     else:
         raise NotImplementedError("Type not implemented:", type(sm))
             
-def convert_sm_to_pydantic_model(sm: model.Submodel) -> base.Submodel:
+def convert_submodel_to_pydantic_model(sm: model.Submodel) -> base.Submodel:
     """
     Converts a Submodel to a Pydantic model.
     """

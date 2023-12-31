@@ -151,6 +151,7 @@ def get_data_specification_for_pydantic_model(
         ),
         data_specification_content=model.DataSpecificationIEC61360(
             preferred_name=model.LangStringSet({"en": "class_name"}),
+            # TODO: embed here all information from the pydantic model (class name, attribute name, attribute required, ...). Also for union types allow list. 
             value=pydantic_model.__class__.__name__,
         ),
     )
@@ -159,7 +160,7 @@ def get_data_specification_for_pydantic_model(
 def get_data_specification_for_attribute_name(
     attribute_name: str,
 ) -> model.EmbeddedDataSpecification:
-    # TODO: also specify here if the attribute is required or not!
+    # TODO: Remove this after not needed anymore
     return model.EmbeddedDataSpecification(
         data_specification=model.ExternalReference(
             key=(
@@ -277,6 +278,58 @@ def set_example_values(model: Type[BaseModel]) -> Type[BaseModel]:
     model.__config__ = NewConfig
     return model
 
+def base_model_check(field: ModelField) -> bool:
+    """
+    Checks if a pydantic model field is a base model.
+
+    Args:
+        field (ModelField): Pydantic model field.
+
+    Returns:
+        bool: If the model field is a base model.
+    """
+    if isinstance(field.default, BaseModel):
+        return True
+    if typing.get_origin(field.type_) is typing.Union:
+        args = typing.get_args(field.type_)
+        if all(issubclass(arg, BaseModel) for arg in args):
+            return True
+    else:
+        if issubclass(field.type_, BaseModel):
+            return True
+        
+
+def union_type_check(model: Type) -> bool:
+    """
+    Checks if a type is a union type.
+
+    Args:
+        model (Type): Type.
+
+    Returns:
+        bool: If the type is a union type.
+    """
+    if typing.get_origin(model) is typing.Union:
+        args = typing.get_args(model)
+        if all(issubclass(arg, BaseModel) for arg in args):
+            return True
+        else:
+            False
+    else:
+        return False
+        
+def union_type_field_check(field: ModelField) -> bool:
+    """
+    Checks if a pydantic model field is a union type.
+
+    Args:
+        field (ModelField): Pydantic model field.
+
+    Returns:
+        bool: If the model field is a union type.
+    """
+    return union_type_check(field.type_)
+
 
 def set_required_fields(
     model: Type[BaseModel], origin_model: Type[BaseModel]
@@ -292,7 +345,16 @@ def set_required_fields(
         Type[BaseModel]: Pydantic model with the required fields set.
     """
     for field_name, field in origin_model.__fields__.items():
-        if isinstance(field.default, BaseModel) or issubclass(field.type_, BaseModel):
+        if union_type_field_check(field):
+            original_sub_types = typing.get_args(field.type_)
+            model_sub_types = typing.get_args(model.__fields__[field_name].type_)
+            new_types = []
+            for original_sub_type, model_sub_type in zip(original_sub_types, model_sub_types):
+                new_type = set_required_fields(model_sub_type, original_sub_type)
+                new_types.append(new_type)
+            # TODO: rework this with typing.Union[*new_types] for python 3.11
+            model.__fields__[field_name].type_ = typing.Union[tuple(new_types)]
+        elif base_model_check(field):
             new_type = set_required_fields(model.__fields__[field_name].type_, field.type_)
             model.__fields__[field_name].type_ = new_type
         if field.required:
@@ -313,7 +375,15 @@ def set_default_values(
         Type[BaseModel]: Pydantic model with the default values set.
     """
     for field_name, field in origin_model.__fields__.items():
-        if isinstance(field.default, BaseModel) or issubclass(field.type_, BaseModel):
+        if union_type_field_check(field):
+            original_sub_types = typing.get_args(field.type_)
+            model_sub_types = typing.get_args(model.__fields__[field_name].type_)
+            new_types = []
+            for original_sub_type, model_sub_type in zip(original_sub_types, model_sub_types):
+                new_type = set_default_values(model_sub_type, original_sub_type)
+                new_types.append(new_type)
+            model.__fields__[field_name].type_ = typing.Union[tuple(new_types)]
+        elif base_model_check(field):
             new_type = set_default_values(model.__fields__[field_name].type_, field.type_)
             model.__fields__[field_name].type_ = new_type
         if not field.required and (
@@ -356,6 +426,8 @@ def get_pydantic_models_from_instances(
         # TODO: make it work, even if an optional value is None -> Replace with empty string or so
         # TODO: also check for union types, and resolve their types correctly
         pydantic_model = create_model(model_name, **vars(instance))
+        print(pydantic_model)
+        print(pydantic_model.__fields__)
         pydantic_model = set_example_values(pydantic_model)
         pydantic_model = set_required_fields(pydantic_model, instance.__class__)
         pydantic_model = set_default_values(pydantic_model, instance.__class__)

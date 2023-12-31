@@ -2,12 +2,13 @@ from __future__ import annotations
 
 import json
 from urllib import parse
-from uuid import uuid1
+from enum import Enum
+
 
 from basyx.aas import model
 
-from typing import Union, Optional, Any
-from pydantic import BaseModel, Field
+from typing import Union
+from pydantic import BaseModel
 from aas2openapi.util import convert_util
 
 from aas2openapi.models import base
@@ -165,6 +166,9 @@ def get_value_type_of_attribute(
 def create_property(
     attribute_name: str, attribute_value: Union[str, int, float, bool],
 ) -> model.Property:
+    if isinstance(attribute_value, Enum):
+        attribute_value = attribute_value.value
+
     property = model.Property(
         id_short=attribute_name,
         value_type=get_value_type_of_attribute(attribute_value),
@@ -233,9 +237,6 @@ def create_submodel_element_list(
     return sml
 
 
-from ba_syx_aas_repository_client.models import (
-    AssetInformationAssetKind,
-)
 import basyx.aas.adapter.json.json_serialization
 
 

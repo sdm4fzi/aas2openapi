@@ -117,7 +117,7 @@ async def get_submodel_from_server(submodel_id: str) -> base.Submodel:
         base.Submodel: submodel retrieved from the server
     """
     basyx_submodel = await get_basyx_submodel_from_server(submodel_id)
-    model_data = aas2openapi.convert_sm_to_pydantic_model(basyx_submodel)
+    model_data = aas2openapi.convert_submodel_to_pydantic_model(basyx_submodel)
     return model_data
 
 
@@ -145,7 +145,7 @@ async def get_all_submodels_of_type(model: BaseModel) -> List[base.Submodel]:
     submodels_of_type = []
     for submodel_data in submodels_data:
         basyx_submodel = client_utils.transform_client_to_basyx_model(submodel_data)
-        submodel = aas2openapi.convert_sm_to_pydantic_model(basyx_submodel)
+        submodel = aas2openapi.convert_submodel_to_pydantic_model(basyx_submodel)
         if submodel.__class__.__name__ == model.__name__:
             submodels_of_type.append(submodel)
     return submodels_of_type
