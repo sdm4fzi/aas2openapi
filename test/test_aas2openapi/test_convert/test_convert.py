@@ -28,7 +28,4 @@ def test_convert_special_aas(example_special_aas_instance: base.AAS):
     pydantic_models = convert_aas.convert_object_store_to_pydantic_models(basyx_aas)
     assert len(pydantic_models) == 1	
     pydantic_model = pydantic_models[0]
-    
-    print(pydantic_model.dict())
-    print(example_special_aas_instance.dict())
     assert pydantic_model.dict() == example_special_aas_instance.dict()

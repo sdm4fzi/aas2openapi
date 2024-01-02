@@ -15,7 +15,6 @@ def test_get_all_aas(client, example_aas_instance):
     class_name = example_aas_instance.__class__.__name__
     response = client.get(url=f"/{class_name}/")
     assert response.status_code == 200
-    print(response.json())
     assert response.json() == [example_aas_instance.dict()]
 
 @pytest.mark.order(102)

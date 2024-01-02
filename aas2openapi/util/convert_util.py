@@ -426,8 +426,6 @@ def get_pydantic_models_from_instances(
         # TODO: make it work, even if an optional value is None -> Replace with empty string or so
         # TODO: also check for union types, and resolve their types correctly
         pydantic_model = create_model(model_name, **vars(instance))
-        print(pydantic_model)
-        print(pydantic_model.__fields__)
         pydantic_model = set_example_values(pydantic_model)
         pydantic_model = set_required_fields(pydantic_model, instance.__class__)
         pydantic_model = set_default_values(pydantic_model, instance.__class__)

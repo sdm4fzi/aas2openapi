@@ -140,12 +140,12 @@ def example_special_sm_instance1() -> models.Submodel:
         Iterator[typing.Generator[SpecialBillOfMaterial, typing.Any, None]]: the example instance of SpecialBillOfMaterial.
     """
     return SpecialBillOfMaterial(
-        id="BOMP1",
+        id="BOMP1_Special",
         components=["stator", "rotor", "coil", "bearing"],
-        semantic_id="BOMP1_semantic_id",
+        semantic_id="BOMP1_Special_semantic_id",
         bill_of_material_info=SpecialBillOfMaterialInfo(
-            id_short="BOMInfoP1",
-            semantic_id="BOMInfoP1_semantic_id",
+            id_short="BOMInfoP1_Special",
+            semantic_id="BOMInfoP1_Special_semantic_id",
             manufacterer="Bosch", 
             product_type="A542", 
             product_version="1.0.0",
@@ -162,14 +162,14 @@ def example_special_sm_instance2() -> models.Submodel:
         Iterator[typing.Generator[SpecialBillOfMaterial, typing.Any, None]]: the example instance of SpecialBillOfMaterial.
     """
     return SpecialBillOfMaterial(
-        id="BOMP1",
+        id="BOMP2_Special",
         components=["stator", "rotor", "coil", "bearing"],
-        semantic_id="BOMP1_semantic_id",
+        semantic_id="BOMP2_Special_semantic_id",
         bill_of_material_info=BillOfMaterialInfo(
-            id_short="BOMInfoP1",
-            semantic_id="BOMInfoP1_semantic_id",
-            manufacterer="Bosch", 
-            product_type="A542", 
+            id_short="BOMInfoP2_Special",
+            semantic_id="BOMInfoP2_Special_semantic_id",
+            manufacterer="Siemens", 
+            product_type="S1929", 
         )
     )
 
@@ -182,19 +182,19 @@ def example_special_aas_instance() -> models.AAS:
         Iterator[typing.Generator[SpecialProduct, typing.Any, None]]: the example instance of SpecialProduct.
     """
     return SpecialProduct(
-    id="Product1",
+    id="Product1_Special",
     process_model=ProcessModel(
-        id="PMP1",
+        id="PMP1_Special",
         processes=["join", "screw"],
-        semantic_id="PMP1_semantic_id",
+        semantic_id="PMP1_Special_semantic_id",
     ),
     special_bill_of_material=SpecialBillOfMaterial(
-        id="BOMP1", 
+        id="BOMP1_Special", 
         components=["stator", "rotor", "coil", "bearing"],
-        semantic_id="BOMP1_semantic_id",
+        semantic_id="BOMP1_Special_semantic_id",
         bill_of_material_info=SpecialBillOfMaterialInfo(
-            id_short="BOMInfoP1",
-            semantic_id="BOMInfoP1_semantic_id",
+            id_short="BOMInfoP1_Special",
+            semantic_id="BOMInfoP1_Special_semantic_id",
             manufacterer="Bosch", 
             product_type="A542", 
             product_version="1.0.0",
