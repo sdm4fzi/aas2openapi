@@ -13,7 +13,7 @@ from pydantic.fields import ModelField, FieldInfo
 from pydantic import BaseConfig, validator
 
 from graphene_pydantic import PydanticObjectType, PydanticInputObjectType
-from graphene_pydantic.registry import registry as graphene_registry
+from graphene_pydantic.registry import get_global_registry
 
 import graphene
 from starlette_graphene3 import GraphQLApp, make_graphiql_handler, make_playground_handler
@@ -40,11 +40,10 @@ def create_graphe_pydantic_output_type_for_model(input_model: Type[BaseModel], u
     Returns:
         PydanticObjectType: Graphene Object type for the given pydantic model.
     """
-    for key, value in graphene_registry.items():
-        for model_name in value._registry.keys():
-            if input_model.__name__.split(".")[-1] == model_name.__name__.split(".")[-1]:
-                # avoid duplicate registration of models
-                return value._registry[model_name]
+    graphene_model_registry = get_global_registry(PydanticObjectType)._registry
+    for model in graphene_model_registry.keys():
+        if input_model == model.__name__:
+            return graphene_model_registry[model]
 
     rework_default_list_to_default_factory(input_model)
     graphene_model = type(input_model.__name__, (PydanticObjectType,), {'Meta': type('Meta', (), {'model': input_model})})
@@ -183,7 +182,15 @@ def generate_graphql_endpoint(models: List[Type[BaseModel]]) -> GraphQLApp:
         for submodel in submodels:
             graphene_submodels.append(create_graphe_pydantic_output_type_for_submodel_elements(submodel))
 
+        for submodel, graphene_submodel in zip(submodels, graphene_submodels):
+            submodel_name = submodel.__name__
+            class_dict = {
+            f"{submodel_name}": graphene.List(graphene_submodel),
+            f"resolve_{submodel_name}": get_submodel_resolve_function(submodel),
+            }
+            query = type("Query", (query,), class_dict)
 
+    for model in models:
 
         graphene_model = create_graphe_pydantic_output_type_for_model(model)
         
@@ -193,13 +200,6 @@ def generate_graphql_endpoint(models: List[Type[BaseModel]]) -> GraphQLApp:
         }
         query = type("Query", (query,), class_dict)
 
-        for submodel, graphene_submodel in zip(submodels, graphene_submodels):
-            submodel_name = submodel.__name__
-            class_dict = {
-            f"{submodel_name}": graphene.List(graphene_submodel),
-            f"resolve_{submodel_name}": get_submodel_resolve_function(submodel),
-            }
-            query = type("Query", (query,), class_dict)
-   
+
     schema = graphene.Schema(query=query)
     return GraphQLApp(schema=schema, on_get=make_graphiql_handler())
