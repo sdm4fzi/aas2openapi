@@ -1,10 +1,10 @@
-ARG APP_VERSION=0.2.2
+ARG APP_VERSION=0.2.3
 FROM python:3.11-slim
 
 # Set the working directory in the container
 WORKDIR /app
 # Install dependencies using Poetry
-RUN pip install aas2openapi==0.2.2
+RUN pip install aas2openapi==0.2.3
 
 COPY . /app
 
