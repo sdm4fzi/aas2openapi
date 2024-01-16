@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "aas2openapi"
-version = "0.2.3"
+version = "0.2.4"
 description = ""
 authors = ["SebBehrendt"]
 license = "MIT License"
@@ -10,7 +10,7 @@ readme = "README.md"
 python = "^3.10"
 pydantic = "^1.10.9"
 uvicorn = {extras = ["standard"], version = "^0.21.0"}
-fastapi = "^0.95.0"
+fastapi = "0.99.1"
 openapi-python-client = "^0.14.1"
 strawberry-graphql = {extras = ["debug-server"], version = "^0.199.0"}
 email-validator = "^2.0.0.post2"
