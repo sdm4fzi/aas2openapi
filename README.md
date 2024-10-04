@@ -1,3 +1,18 @@
+# ⚠️ Deprecation Notice
+
+**This software package has been moved to a new destination and is no longer maintained here.**
+Please use in the future [aas-middleware](https://github.com/sdm4fzi/aas_middleware) which is an improved version of aas2openapi with an enriched feature set. 
+
+- **New Location**: [aas-middleware Github](https://github.com/sdm4fzi/aas_middleware)
+- **Deprecation Status**: This package is deprecated and will not receive any further updates or maintenance in this repository.
+- **Future Support**: All future support and developments will be made in the new repository.
+
+We encourage all users to switch to the new repository as soon as possible to receive the latest updates and improvements. 
+
+If you have any questions or need assistance, please feel free to reach out in the [new repository's issue tracker](https://github.com/sdm4fzi/aas_middleware/issues).
+
+Thank you for your understanding!
+
 # aas2openapi - Middleware for Asset Administration Shell and openAPI 3.0
 
 ![Build-sucess](https://img.shields.io/badge/build-success-green)
